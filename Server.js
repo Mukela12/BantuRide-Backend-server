@@ -30,6 +30,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/auth", userRoute);
 app.use("/bookride", Rides);
 
+// Handle HEAD requests to root
+app.head('/', (req, res) => {
+    res.status(200).send();
+});
+
+// Root route to verify server is running
+app.get('/', (req, res) => {
+    res.status(200).send('Server is running!');
+});
+
 
 // run server
 app.listen(PORT, () => {

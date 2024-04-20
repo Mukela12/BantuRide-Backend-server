@@ -18,6 +18,7 @@ router.put("/update-user", updateUserController);
 router.post("/verify-otp", verifyOTP);
 
 
+
 // Using multer
 
 // For handling multipart/form-data
