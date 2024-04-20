@@ -127,6 +127,14 @@ const loginController = async (req, res) => {
             });
         }
 
+        // Check if OTP verification is pending
+        if (user.otp) {
+            return res.status(403).send({
+                success: false,
+                message: "Please verify your OTP before logging in."
+            });
+        }
+
         const match = await comparePassword(password, user.password);
 
         if (!match) {
@@ -136,7 +144,6 @@ const loginController = async (req, res) => {
             });
         }
 
-        
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
         user.password = undefined; // Exclude password from output
 
