@@ -7,7 +7,7 @@ This guide will walk you through how to use the API for booking rides on Flutter
 ### Base URL
 The base URL for the BantuRide API is:
 ```
-https://banturide.onrender.com/api
+https://banturide.onrender.com/bookride
 ```
 
 ### Endpoints
@@ -18,7 +18,7 @@ To book a ride, send a POST request to `/book-request` endpoint with the necessa
 Example Request:
 ```dart
 final response = await http.post(
-  'https://banturide.onrender.com/api/book-request',
+  'https://banturide.onrender.com/bookride/book-request',
   body: {
     'user': 'John Doe',
     'pickUpLatitude': '37.7749',
@@ -37,7 +37,7 @@ To cancel a booking, send a POST request to `/cancel-booking` endpoint with the 
 Example Request:
 ```dart
 final response = await http.post(
-  'https://banturide.onrender.com/api/cancel-booking',
+  'https://banturide.onrender.com/bookride/cancel-booking',
   body: {
     'bookingId': '123456',
   },
@@ -50,7 +50,7 @@ To request driver cancellation, send a POST request to `/request-driver-cancella
 Example Request:
 ```dart
 final response = await http.post(
-  'https://banturide.onrender.com/api/request-driver-cancellation',
+  'https://banturide.onrender.com/bookride/request-driver-cancellation',
   body: {
     'bookingId': '123456',
     'driverId': '789012',
@@ -64,7 +64,7 @@ To indicate driver arrival at the pickup location, send a POST request to `/driv
 Example Request:
 ```dart
 final response = await http.post(
-  'https://banturide.onrender.com/api/driver-at-pickup-location',
+  'https://banturide.onrender.com/bookride/driver-at-pickup-location',
   body: {
     'bookingId': '123456',
     'driverId': '789012',
@@ -78,7 +78,7 @@ To start the ride, send a POST request to `/start-ride` endpoint with the bookin
 Example Request:
 ```dart
 final response = await http.post(
-  'https://banturide.onrender.com/api/start-ride',
+  'https://banturide.onrender.com/bookride/start-ride',
   body: {
     'bookingId': '123456',
     'driverId': '789012',
@@ -92,7 +92,7 @@ To end the ride, send a POST request to `/end-ride` endpoint with the booking ID
 Example Request:
 ```dart
 final response = await http.post(
-  'https://banturide.onrender.com/api/end-ride',
+  'https://banturide.onrender.com/bookride/end-ride',
   body: {
     'bookingId': '123456',
     'driverId': '789012',
