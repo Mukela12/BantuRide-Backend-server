@@ -11,12 +11,28 @@ const bookingSchema = new mongoose.Schema({
     ref: "Driver",
   },
   pickUpLocation: {
-    type: String,
-    required: true,
+    latitude: {
+      type: Number,
+      required: true,
+    },
+    longitude: {
+      type: Number,
+      required: true,
+    },
   },
   dropOffLocation: {
-    type: String,
-    required: true,
+    latitude: {
+      type: Number,
+      required: true,
+    },
+    longitude: {
+      type: Number,
+      required: true,
+    },
+  },
+  thirdStop: {
+    latitude: Number, // Optional third stop latitude
+    longitude: Number, // Optional third stop longitude
   },
   status: {
     type: String,
@@ -26,14 +42,29 @@ const bookingSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: true,
-    min: 0, // Ensure the price is non-negative
+    min: 0,
+  },
+  driverCancellationRequested: {
+    type: Boolean,
+    default: false,
+  },
+  userCancellationRequested: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  driverArrivedAtPickup: {
+    type: Boolean,
+    default: false,
+  },
+  driverArrivedAtDropoff: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Booking = mongoose.model("Booking", bookingSchema);
-
 export default Booking;

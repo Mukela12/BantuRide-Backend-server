@@ -1,39 +1,61 @@
 import Booking from "../models/BookRideModel.js";
-import { userModel } from "../models/UserModel.js";
+import { DriverModel } from '../models/DriverModel.js';
+import socketServer from '../helpers/socketServer.js'; // Import the HTTP server instance
+
+import { Server } from 'socket.io';
+import http from 'http';
+import express from 'express';
+
+const app = express();
+const server = http.createServer(app); // Create an HTTP server instance
 
 
-const PassagerBookingRequest = async (req, res) => {
-  try {
-    const { user, pickUpLocation, dropOffLocation, price } = req.body;
 
-    // Check if user, pick-up, and drop-off locations are provided
-    if (!user || !pickUpLocation || !dropOffLocation) {
-      console.log(req.body);
-      return res.status(400).json({
-        success: false,
-        message: "User, pick-up, and drop-off locations are required.",
-        user: user,
-        pickUpLocation: pickUpLocation,
-        dropOffLocation: dropOffLocation,
-      });
-    }
+const io = new Server(socketServer(server));
 
-    // Create a new booking
-    const newBooking = new Booking({
-      user,
-      pickUpLocation,
-      dropOffLocation,
-      price,
+
+// Controller to handle initial booking request
+const PassengerBookingRequest = async (req, res) => {
+  const { user, pickUpLatitude, pickUpLongitude, dropOffLatitude, dropOffLongitude, price, hasThirdStop, thirdStopLatitude, thirdStopLongitude } = req.body;
+
+  if (!user || !pickUpLatitude || !pickUpLongitude || !dropOffLatitude || !dropOffLongitude) {
+    return res.status(400).json({
+      success: false,
+      message: "User, pick-up, and drop-off locations are required.",
     });
+  }
 
-    // Save the booking to the database
+  const newBooking = new Booking({
+    user,
+    pickUpLocation: {
+      latitude: pickUpLatitude,
+      longitude: pickUpLongitude,
+    },
+    dropOffLocation: {
+      latitude: dropOffLatitude,
+      longitude: dropOffLongitude,
+    },
+    price,
+    status: 'pending'
+  });
+
+  if (hasThirdStop && thirdStopLatitude && thirdStopLongitude) {
+    newBooking.thirdStop = {
+      latitude: thirdStopLatitude,
+      longitude: thirdStopLongitude,
+    };
+  }
+
+  try {
     await newBooking.save();
+    
+    // Send initial search result to the user
+    await searchAndSendAvailableDrivers(newBooking, res);
 
-    // Send a response
-    return res.status(201).json({
-      success: true,
-      message: "Ride Request sent successfully.",
-      booking: newBooking,
+    // Listen for user's feedback to select a driver
+    io.on('driverSelection', async (data) => {
+      const { bookingId, driverId } = data;
+      await assignDriverToBooking(bookingId, driverId, res);
     });
 
   } catch (error) {
@@ -46,157 +68,90 @@ const PassagerBookingRequest = async (req, res) => {
   }
 };
 
-
-const GetRideRequests = async (req, res) => {
-  const { Driver } = req.body;
-
-  try {
-    if (!Driver) {
-      return res.status(500).send({
-        success: false,
-        message: "Driver not found",
-      });
+// Function to search for available drivers and send updates to the user
+const searchAndSendAvailableDrivers = async (booking, res) => {
+  const interval = setInterval(async () => {
+    try {
+      const driver = await findNearestDriver([booking.pickUpLocation.longitude, booking.pickUpLocation.latitude]);
+      if (driver) {
+        // Emit driverAvailable event to update user
+        io.emit('driverAvailable', {
+          bookingId: booking._id,
+          driver: {
+            _id: driver._id,
+            firstName: driver.firstName,
+            lastName: driver.lastName,
+            vehicleInfo: driver.vehicleInfo
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error searching for available drivers:", error);
     }
+  }, 60000); // Search every minute
 
-    // Check driver availability before proceeding
-    const driverInfo = await userModel.findById(Driver);
-    if (!driverInfo || driverInfo.driverStatus !== "available") {
-      return res.status(400).json({
-        success: false,
-        message: "Driver is currently unavailable for requests.",
-      });
-    }
-
-    // Find nearby pending requests (consider adding an index on `status` and `pickUpLocation`)
-    const now = new Date();
-    const oneMinuteAgo = new Date(now.getTime() - 60000); // Adjust as needed
-    const nearbyRequests = await Booking.find({
-      status: "pending",
-      pickUpLocation: {
-        $geoWithin: {
-          $centerSphere: [driverInfo.location.coordinates, 20 / 3963.2], // 20 miles
-        },
-      },
-      createdAt: { $gte: oneMinuteAgo }, // Filter for recent requests
-    })
-      .sort({ date: -1 }); // Sort by newest first
-
-    if (nearbyRequests.length > 0) {
-      // Send available requests
-      return res.status(200).json({
-        success: true,
-        message: "Available ride requests found!",
-        requests: nearbyRequests,
-      });
-    } else {
-      // Inform driver about no requests
-      return res.status(200).json({
-        success: true,
-        message: "No available ride requests found at this time.",
-      });
-    }
-  } catch (error) {
-    console.error("Error in getting ride requests:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error during getting ride requests.",
-      error: error.message || error,
-    });
-  }
+  // Stop searching after 5 minutes
+  setTimeout(() => {
+    clearInterval(interval);
+  }, 300000); // 5 minutes
 };
 
-
-
-
-// This Module will wait for the Driver to confirm a Customer
-// Flow:
-// 1. Driver selects their prefered customer
-// 2. POST request is sent to this module 
-// 3. Module updates booking details with the Driver's information and information it received of user and booking details from previous request (GetRideRequests)
-const DriverConfirmation = async (req, res) => {
-  const { Driver, user, pickUpLocation, dropOffLocation } = req.body;
-
+// Function to assign a selected driver to the booking
+const assignDriverToBooking = async (bookingId, driverId, res) => {
   try {
-    if (!Driver || !user || !pickUpLocation || !dropOffLocation) {
-      return res.status(400).json({ success: false, message: 'Missing data' });
-    }
+    const booking = await Booking.findById(bookingId);
+    const driver = await DriverModel.findById(driverId);
 
-    // Find the exact pending booking that the driver is confirming
-    const pendingBooking = await Booking.findOne({
-      user,
-      status: 'pending',
-      pickUpLocation,
-      dropOffLocation,
-    });
-
-    if (!pendingBooking) {
+    if (!booking || !driver) {
       return res.status(404).json({
         success: false,
-        message: 'Pending booking not found with the provided details.',
+        message: "Booking or driver not found.",
       });
     }
 
-    // Update the booking with driver information and set status to 'confirmed'
-    const confirmedBooking = await Booking.findOneAndUpdate(
-      { _id: pendingBooking._id, status: 'pending' },
-      { driver: Driver, status: 'confirmed' },
-      { new: true } // Return the updated document
-    );
+    booking.driver = driverId;
+    booking.status = 'confirmed';
+    await booking.save();
 
-    if (!confirmedBooking) {
-      return res.status(500).json({
-        success: false,
-        message: 'Error confirming booking. Please try again.',
-      });
-    }
+    // Set driver status to unavailable
+    driver.driverStatus = 'unavailable';
+    await driver.save();
 
-    return res.status(200).json({ success: true, message: 'Customer confirmed', booking: confirmedBooking });
-
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, message: 'Error during driver confirmation', error });
-  }
-};
-
-
-// This Module will continously receive requests from the customer to check if a driver has accepted their request 
-// Flow:
-// 1. After Customer has already sent request a wait for driver confirmation begins 
-// 2. Once a driver has confirmed with an update in the booking schema connected to the user
-const BookingUpdate = async (req, res) => {
-  const { user } = req.body;
-
-  try {
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "User is required for booking updates.",
-      });
-    }
-
-    // Create a Change Stream on the Booking collection
-    const bookingChangeStream = Booking.watch();
-
-    // Listen for changes specific to the user and driver assignment
-    bookingChangeStream.on('change', async (change) => {
-      if (change.operationType === 'update' &&
-          change.documentKey._id === user &&
-          change.updateDescription.updatedFields.driver) {
-        // Once the driver is assigned, send a response
-        return res.status(200).json({
-          success: true,
-          message: "We found you a Driver!",
-          user,
-          driver: change.updateDescription.updatedFields.driver,
-        });
+    // Emit booking confirmation event to user
+    io.emit('bookingConfirmed', {
+      bookingId: booking._id,
+      driver: {
+        _id: driver._id,
+        firstName: driver.firstName,
+        lastName: driver.lastName,
+        vehicleInfo: driver.vehicleInfo
       }
     });
 
+    return res.status(200).json({
+      success: true,
+      message: "Driver selected and booking confirmed successfully!",
+      booking: {
+        _id: booking._id,
+        user: booking.user,
+        pickUpLocation: booking.pickUpLocation,
+        dropOffLocation: booking.dropOffLocation,
+        thirdStop: booking.thirdStop,
+        price: booking.price,
+        status: booking.status,
+        driver: {
+          _id: driver._id,
+          firstName: driver.firstName,
+          lastName: driver.lastName,
+          vehicleInfo: driver.vehicleInfo
+        }
+      }
+    });
   } catch (error) {
-    console.error("Error in booking update:", error);
+    console.error("Error in assigning driver to booking:", error);
     return res.status(500).json({
       success: false,
-      message: "Error in booking update.",
+      message: "Error in assigning driver to booking.",
       error: error.message || error,
     });
   }
@@ -204,46 +159,235 @@ const BookingUpdate = async (req, res) => {
 
 
 
-const CancelBooking = async (req, res) => {
-  const { user } = req.body;
+// Controller to handle cancellation of a ride by a user
+const cancelBooking = async (req, res) => {
+  const { bookingId } = req.body;
 
   try {
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "User is required for cancelling a booking.",
-      });
-    }
+    const booking = await Booking.findById(bookingId);
 
-    // Find the booking by user and update its status to 'cancelled'
-    const canceledBooking = await Booking.findOneAndUpdate(
-      { user, status: 'pending' }, // Only cancel 'pending' bookings
-      { $set: { status: 'cancelled' } },
-      { new: true } // Return the updated document
-    );
-
-    if (!canceledBooking) {
+    if (!booking) {
       return res.status(404).json({
         success: false,
-        message: "No pending booking found for cancellation.",
+        message: "Booking not found.",
       });
     }
+
+    // Update booking status to "cancelled"
+    booking.status = 'cancelled';
+    await booking.save();
+
+    // Set driver status to available if a driver is assigned
+    if (booking.driver) {
+      const driver = await DriverModel.findById(booking.driver);
+      if (driver) {
+        driver.driverStatus = 'available';
+        await driver.save();
+      }
+    }
+
+    // Emit cancellation event
+    io.emit('bookingCancelled', { bookingId });
 
     return res.status(200).json({
       success: true,
       message: "Booking cancelled successfully.",
-      booking: canceledBooking,
     });
-
   } catch (error) {
-    console.error("Error in canceling a booking:", error);
+    console.error("Error in cancelling booking:", error);
     return res.status(500).json({
       success: false,
-      message: "Error in canceling a booking.",
+      message: "Error in cancelling booking.",
       error: error.message || error,
     });
   }
 };
 
-export { PassagerBookingRequest, GetRideRequests, DriverConfirmation, BookingUpdate, CancelBooking };
+// Function to handle driver ride cancellation request
+const requestDriverCancellation = async (req, res) => {
+  const { bookingId, driverId } = req.body;
+
+  try {
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking || booking.driver !== driverId) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found or driver not associated with the booking.",
+      });
+    }
+
+    // Set driver cancellation request flag
+    booking.driverCancellationRequested = true;
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver's ride cancellation request sent successfully.",
+    });
+  } catch (error) {
+    console.error("Error in requesting driver ride cancellation:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in requesting driver ride cancellation.",
+      error: error.message || error,
+    });
+  }
+};
+
+// Listener for user acceptance of driver ride cancellation
+io.on('connection', (socket) => {
+  socket.on('acceptDriverCancellation', async (data) => {
+    const { bookingId, driverId } = data;
+    try {
+      const booking = await Booking.findById(bookingId);
+
+      if (booking && booking.driverCancellationRequested && booking.driver === driverId) {
+        // Set driver to available
+        const driver = await DriverModel.findById(driverId);
+        if (driver) {
+          driver.driverStatus = 'available';
+          await driver.save();
+        }
+
+        // Remove driver from booking
+        booking.driver = undefined;
+        booking.driverCancellationRequested = false;
+        booking.status = 'pending';
+        await booking.save();
+
+        // Begin search for a new driver
+        await searchAndSendAvailableDrivers(booking, res);
+
+        return res.status(200).json({
+          success: true,
+          message: "Driver's ride cancellation accepted. Booking set to pending.",
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request or driver's ride cancellation not requested.",
+        });
+      }
+    } catch (error) {
+      console.error("Error in accepting driver ride cancellation:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error in accepting driver ride cancellation.",
+        error: error.message || error,
+      });
+    }
+  });
+});
+
+
+// Controller to handle driver arrival at pickup location
+const driverAtPickupLocation = async (req, res) => {
+  const { bookingId } = req.body;
+
+  try {
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking || booking.status !== 'confirmed' || !booking.driver) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid booking or booking not in confirmed status or no driver assigned.",
+      });
+    }
+
+    // Update booking status to indicate driver arrival
+    booking.driverArrivedAtPickup = true;
+    await booking.save();
+
+    // Emit event to notify user that driver has arrived at pickup location
+    io.emit('driverArrivedAtPickup', { bookingId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver has arrived at pickup location.",
+    });
+  } catch (error) {
+    console.error("Error in notifying driver arrival at pickup location:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in notifying driver arrival at pickup location.",
+      error: error.message || error,
+    });
+  }
+};
+
+
+// Controller to handle starting the ride
+const startRide = async (req, res) => {
+  const { bookingId } = req.body;
+
+  try {
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking || !booking.driverArrivedAtPickup) {
+      return res.status(400).json({
+        success: false,
+        message: "You must arrive at the pickup location before starting the ride.",
+      });
+    }
+
+    // Update booking status to indicate ride has started
+    booking.status = 'ongoing';
+    await booking.save();
+
+    // Emit event to notify user that the ride has started
+    io.emit('rideStarted', { bookingId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Ride has started.",
+    });
+  } catch (error) {
+    console.error("Error in starting the ride:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in starting the ride.",
+      error: error.message || error,
+    });
+  }
+};
+
+// Controller to handle ending the ride
+const endRide = async (req, res) => {
+  const { bookingId } = req.body;
+
+  try {
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking || booking.status !== 'ongoing') {
+      return res.status(400).json({
+        success: false,
+        message: "The ride is not ongoing or booking not found.",
+      });
+    }
+
+    // Update booking status to indicate ride has ended
+    booking.driverArrivedAtDropoff = true;
+    booking.status = 'completed';
+    await booking.save();
+
+    // Emit event to notify user that the ride has ended
+    io.emit('rideEnded', { bookingId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Ride has ended.",
+    });
+  } catch (error) {
+    console.error("Error in ending the ride:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in ending the ride.",
+      error: error.message || error,
+    });
+  }
+};
+
+export { PassengerBookingRequest, cancelBooking, requestDriverCancellation, driverAtPickupLocation, startRide, endRide };
+
 

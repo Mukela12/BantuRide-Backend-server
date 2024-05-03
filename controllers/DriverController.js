@@ -10,7 +10,18 @@ const generateHOTP = (secret, counter) => {
 };
 
 const registerOne = async (req, res) => {
-    const { firstName, lastName, dob, email, phoneNumber, nrcNumber, address, password } = req.body;
+    const { 
+        firstName, 
+        lastName, 
+        dob, 
+        email, 
+        phoneNumber, 
+        nrcNumber, 
+        address, 
+        password,
+        latitude,  // Added latitude parameter
+        longitude  // Added longitude parameter
+    } = req.body;
 
     try {
         if (await DriverModel.findOne({ email })) {
@@ -28,7 +39,12 @@ const registerOne = async (req, res) => {
             nrcNumber,
             address,
             password: hashedPassword,
-            otp: generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000))
+            driverStatus: "available",
+            otp: generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000)),
+            location: {  // Construct the location object from latitude and longitude
+                type: "Point",
+                coordinates: [parseFloat(longitude), parseFloat(latitude)]
+            }
         });
 
         await driver.save();

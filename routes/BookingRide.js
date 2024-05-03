@@ -1,14 +1,25 @@
 import express from "express";
-import { PassagerBookingRequest, GetRideRequests, DriverConfirmation, BookingUpdate, CancelBooking } from "../controllers/BookRideController.js";
+import {
+  PassengerBookingRequest,
+  cancelBooking,
+  requestDriverCancellation,
+  driverAtPickupLocation,
+  startRide,
+  endRide,
+} from "../controllers/BookRideController.js";
 
 const router = express.Router();
 
-// Route to book a ride
-router.post("/BookRequest", PassagerBookingRequest);
-router.post("/Confirm", DriverConfirmation);
-router.get("/GetRideRequest", GetRideRequests);
-router.get("/RideUpdate", BookingUpdate);
-router.post("/cancelride", CancelBooking);
+router.post("/book-request", PassengerBookingRequest);
 
+router.post("/cancel-booking", cancelBooking);
+
+router.post("/request-driver-cancellation", requestDriverCancellation);
+
+router.post("/driver-at-pickup-location", driverAtPickupLocation);
+
+router.post("/start-ride", startRide);
+
+router.post("/end-ride", endRide);
 
 export default router;

@@ -63,7 +63,7 @@ const driverSchema = new mongoose.Schema({
   driverStatus: {
     type: String,
     enum: ["available", "unavailable"],
-    default: "unavailable",
+    default: "available",
   },
   ratings: [
     {
