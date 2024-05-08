@@ -2,8 +2,13 @@ import Booking from "../models/BookRideModel.js";
 import Payment from "../models/PaymentModel.js";
 import socketServer from '../helpers/socketServer.js';
 import { Server } from 'socket.io';
+import http from 'http';
+import express from 'express';
 
-const io = new Server(socketServer);
+const app = express();
+const server = http.createServer(app); // Create an HTTP server instance
+
+const io = new Server(socketServer(server));
 
 // Controller to handle confirming payment and marking the ride as successful
 const confirmPaymentAndMarkRideAsSuccessful = async (req, res) => {

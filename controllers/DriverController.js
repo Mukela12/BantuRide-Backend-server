@@ -4,6 +4,8 @@ import { hashPassword, comparePassword, sendVerificationEmail } from "../helpers
 import { DriverModel } from '../models/DriverModel.js'; // Assuming import path
 import dotenv from "dotenv";
 dotenv.config();
+import http from 'http';
+
 
 const generateHOTP = (secret, counter) => {
     return otplib.hotp.generate(secret, counter);
