@@ -10,6 +10,7 @@ import connectDB from "./config/db.js";
 
 import userRoute from "./routes/AuthRoute.js";
 import Rides from "./routes/BookingRide.js";
+import PaymentRoute from "./routes/PaymentRoute.js";
 import socketServer from "./helpers/socketServer.js";
 
 // configure dotenv
@@ -22,7 +23,7 @@ connectDB();
 const app = express();
 const server = http.createServer(app); // Create http server
 
-const PORT = 3000;
+const PORT = 3004;
 
 // Set up Socket.IO server
 socketServer(server);
@@ -37,20 +38,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // routes
 app.use("/auth", userRoute);
 app.use("/bookride", Rides);
+app.use('payment', PaymentRoute);
 
-// Handle HEAD requests to root
+
 app.head('/', (req, res) => {
     res.status(200).send();
 });
 
-// Root route to verify server is running
+
 app.get('/', (req, res) => {
     res.status(200).send('Server is running!');
 });
 
 
 // run server
-server.listen(PORT, () => { // Use server to listen instead of app
+server.listen(PORT, () => { 
     console.log(`Server is running on port ${PORT}`)
 });
 

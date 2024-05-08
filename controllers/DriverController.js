@@ -19,8 +19,6 @@ const registerOne = async (req, res) => {
         nrcNumber, 
         address, 
         password,
-        latitude,  // Added latitude parameter
-        longitude  // Added longitude parameter
     } = req.body;
 
     try {
@@ -41,10 +39,6 @@ const registerOne = async (req, res) => {
             password: hashedPassword,
             driverStatus: "available",
             otp: generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000)),
-            location: {  // Construct the location object from latitude and longitude
-                type: "Point",
-                coordinates: [parseFloat(longitude), parseFloat(latitude)]
-            }
         });
 
         await driver.save();

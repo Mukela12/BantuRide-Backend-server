@@ -29,12 +29,26 @@ const bookingSchema = new mongoose.Schema({
       type: Number,
       required: true,
     },
+  },  driverCurrentLocation: {
+    latitude: {
+      type: Number,
+      required: false,
+    },
+    longitude: {
+      type: Number,
+      required: false,
+    },
   },
   thirdStop: {
     latitude: Number, // Optional third stop latitude
     longitude: Number, // Optional third stop longitude
   },
   status: {
+    type: String,
+    enum: ["pending", "confirmed", "completed", "cancelled"],
+    default: "pending",
+  },
+  paymentStatus: {
     type: String,
     enum: ["pending", "confirmed", "completed", "cancelled"],
     default: "pending",
