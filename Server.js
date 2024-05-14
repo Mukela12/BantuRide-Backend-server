@@ -38,7 +38,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // routes
 app.use("/auth", userRoute);
 app.use("/bookride", Rides);
-app.use('payment', PaymentRoute);
+app.use('/payment', PaymentRoute);
 
 
 app.head('/', (req, res) => {
