@@ -49,13 +49,11 @@ const PassengerBookingRequest = async (req, res) => {
   try {
     await newBooking.save();
     
-    // Send initial search result to the user
-    await searchAndSendAvailableDrivers(newBooking, res);
-
-    // Listen for user's feedback to select a driver
-    io.on('driverSelection', async (data) => {
-      const { bookingId, driverId } = data;
-      await assignDriverToBooking(bookingId, driverId, res);
+    // Respond with the booking details immediately after saving
+    return res.status(200).json({
+      success: true,
+      message: "Booking request received successfully!",
+      booking: newBooking
     });
 
   } catch (error) {
@@ -63,6 +61,28 @@ const PassengerBookingRequest = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error in booking a ride.",
+      error: error.message || error,
+    });
+  }
+};
+
+const searchDriversForBooking = async (req, res) => {
+  const { bookingId } = req.body;
+  
+  try {
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found."
+      });
+    }
+    await searchAndSendAvailableDrivers(booking, res);
+  } catch (error) {
+    console.error("Error in searching drivers for booking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in processing your request.",
       error: error.message || error,
     });
   }
@@ -388,6 +408,6 @@ const endRide = async (req, res) => {
   }
 };
 
-export { PassengerBookingRequest, cancelBooking, requestDriverCancellation, driverAtPickupLocation, startRide, endRide };
+export { PassengerBookingRequest, cancelBooking, requestDriverCancellation, driverAtPickupLocation, startRide, searchDriversForBooking, endRide };
 
 
