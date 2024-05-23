@@ -6,6 +6,7 @@ import {
   driverAtPickupLocation,
   startRide,
   endRide,
+  searchDriversForBooking
 } from "../controllers/BookRideController.js";
 
 const router = express.Router();
@@ -13,6 +14,8 @@ const router = express.Router();
 router.post("/book-request", PassengerBookingRequest);
 
 router.post("/cancel-booking", cancelBooking);
+
+router.post("/search-driver",searchDriversForBooking);
 
 router.post("/request-driver-cancellation", requestDriverCancellation);
 
