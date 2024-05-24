@@ -66,6 +66,37 @@ const PassengerBookingRequest = async (req, res) => {
   }
 };
 
+
+ * @param {Array<number>} centerCoordinates - The longitude and latitude of the center point [longitude, latitude].
+ * @param {number} radiusMiles - The radius in miles within which to find available drivers.
+ * @returns {Promise<Array>} - A promise that resolves to an array of available drivers.
+ */
+async function findAvailableDriversWithinRadius(centerCoordinates, radiusMiles) {
+  const radiusInMeters = radiusMiles * 1609.34; // Convert miles to meters
+
+  try {
+    const drivers = await DriverModel.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: centerCoordinates
+          },
+          $maxDistance: radiusInMeters
+        }
+      },
+      driverStatus: "available"
+    }).exec();
+
+    return drivers;
+  } catch (error) {
+    console.error("Error finding available drivers within radius:", error);
+    throw error;
+  }
+}
+
+
+
 const searchDriversForBooking = async (req, res) => {
   const { bookingId } = req.body;
   
@@ -90,16 +121,11 @@ const searchDriversForBooking = async (req, res) => {
 
 const searchAndSendAvailableDrivers = async (booking, res) => {
   let searchComplete = false;
+  let intervalId = null;
 
-  const interval = setInterval(async () => {
-    if (searchComplete) {
-      clearInterval(interval);
-      return;
-    }
-
+  const tryFindDrivers = async () => {
     try {
       const drivers = await findAvailableDriversWithinRadius([booking.pickUpLocation.longitude, booking.pickUpLocation.latitude], 3);
-
       if (drivers && drivers.length > 0) {
         // Emit event with all available drivers and stop the search
         io.emit('driversAvailable', {
@@ -118,18 +144,30 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
           message: "Available drivers found.",
           drivers: drivers
         });
-        
-        searchComplete = true; // Mark the search as complete to stop the interval
+
+        clearInterval(intervalId);
+        searchComplete = true; // Mark the search as complete
       }
     } catch (error) {
       console.error("Error searching for available drivers:", error);
+      if (!searchComplete) {
+        clearInterval(intervalId);
+        io.emit('noDriversAvailable', { bookingId: booking._id });
+        res.status(500).json({
+          success: false,
+          message: "Error searching for drivers.",
+          error: error.message || error
+        });
+      }
     }
-  }, 10000); // Search every 10 seconds for testing, adjust as needed
+  };
+
+  intervalId = setInterval(tryFindDrivers, 10000); // Search every 10 seconds
 
   // Set a timeout to stop searching after 1 minute
   setTimeout(() => {
     if (!searchComplete) {
-      clearInterval(interval);
+      clearInterval(intervalId);
       io.emit('noDriversAvailable', { bookingId: booking._id });
       res.status(404).json({
         success: false,
