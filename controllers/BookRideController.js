@@ -67,6 +67,9 @@ const PassengerBookingRequest = async (req, res) => {
 };
 
 
+/**
+ * Finds available drivers within a specified radius from a given point.
+ * 
  * @param {Array<number>} centerCoordinates - The longitude and latitude of the center point [longitude, latitude].
  * @param {number} radiusMiles - The radius in miles within which to find available drivers.
  * @returns {Promise<Array>} - A promise that resolves to an array of available drivers.
