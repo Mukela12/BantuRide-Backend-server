@@ -88,33 +88,57 @@ const searchDriversForBooking = async (req, res) => {
   }
 };
 
-// Function to search for available drivers and send updates to the user
 const searchAndSendAvailableDrivers = async (booking, res) => {
+  let searchComplete = false;
+
   const interval = setInterval(async () => {
+    if (searchComplete) {
+      clearInterval(interval);
+      return;
+    }
+
     try {
-      const driver = await findNearestDriver([booking.pickUpLocation.longitude, booking.pickUpLocation.latitude]);
-      if (driver) {
-        // Emit driverAvailable event to update user
-        io.emit('driverAvailable', {
+      const drivers = await findAvailableDriversWithinRadius([booking.pickUpLocation.longitude, booking.pickUpLocation.latitude], 3);
+
+      if (drivers && drivers.length > 0) {
+        // Emit event with all available drivers and stop the search
+        io.emit('driversAvailable', {
           bookingId: booking._id,
-          driver: {
+          drivers: drivers.map(driver => ({
             _id: driver._id,
             firstName: driver.firstName,
             lastName: driver.lastName,
             vehicleInfo: driver.vehicleInfo
-          }
+          }))
         });
+
+        // Respond to the HTTP request with the available drivers
+        res.status(200).json({
+          success: true,
+          message: "Available drivers found.",
+          drivers: drivers
+        });
+        
+        searchComplete = true; // Mark the search as complete to stop the interval
       }
     } catch (error) {
       console.error("Error searching for available drivers:", error);
     }
-  }, 60000); // Search every minute
+  }, 10000); // Search every 10 seconds for testing, adjust as needed
 
-  // Stop searching after 5 minutes
+  // Set a timeout to stop searching after 1 minute
   setTimeout(() => {
-    clearInterval(interval);
-  }, 300000); // 5 minutes
+    if (!searchComplete) {
+      clearInterval(interval);
+      io.emit('noDriversAvailable', { bookingId: booking._id });
+      res.status(404).json({
+        success: false,
+        message: "No drivers found."
+      });
+    }
+  }, 60000); // 1 minute
 };
+
 
 // Function to assign a selected driver to the booking
 const assignDriverToBooking = async (bookingId, driverId, res) => {
