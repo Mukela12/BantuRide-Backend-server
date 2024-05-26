@@ -21,6 +21,8 @@ const registerOne = async (req, res) => {
         nrcNumber, 
         address, 
         password,
+        latitude,
+        longitude 
     } = req.body;
 
     try {
@@ -39,6 +41,9 @@ const registerOne = async (req, res) => {
             nrcNumber,
             address,
             password: hashedPassword,
+            location: {          
+              coordinates: [longitude, latitude]  
+            },
             driverStatus: "available",
             otp: generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000)),
         });
