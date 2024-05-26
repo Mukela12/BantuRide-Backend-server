@@ -473,6 +473,6 @@ const endRide = async (req, res) => {
   }
 };
 
-export { PassengerBookingRequest, cancelBooking, requestDriverCancellation, driverAtPickupLocation, startRide, searchDriversForBooking, endRide };
+export { PassengerBookingRequest, cancelBooking, requestDriverCancellation, driverAtPickupLocation, assignDriverToBooking, startRide, searchDriversForBooking, endRide };
 
 
