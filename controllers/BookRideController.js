@@ -194,7 +194,7 @@ const assignDriverToBooking = async (bookingId, driverId, res) => {
       });
     }
 
-    booking.driver = driverId;
+    booking.driver = driver;
     booking.status = 'confirmed';
     await booking.save();
 
