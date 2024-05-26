@@ -182,7 +182,11 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
 
 
 // Function to assign a selected driver to the booking
-const assignDriverToBooking = async (bookingId, driverId, res) => {
+const assignDriverToBooking = async (req, res) => {
+
+  const { bookingId, driverId } = req.body;
+
+  
   try {
     const booking = await Booking.findById(bookingId);
     const driver = await DriverModel.findById(driverId);
