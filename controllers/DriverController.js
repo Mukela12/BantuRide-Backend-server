@@ -82,7 +82,7 @@ const registerTwo = async (req, res) => {
         };
 
         await driver.save();
-        return res.status(200).send({ success: true, message: 'Vehicle information added successfully.' });
+        return res.status(200).send({ success: true, message: 'Vehicle information added successfully.', driver: driver });
     } catch (error) {
         console.error('Error in registerTwo API:', error);
         return res.status(500).send({ success: false, message: 'Internal Server Error', error: error.message });
@@ -112,7 +112,7 @@ const signIn = async (req, res) => {
 
         const token = jwt.sign({ _id: driver._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
         
-        return res.status(200).send({ success: true, message: "Login successful", token });
+        return res.status(200).send({ success: true, message: "Login successful", token , driver: driver});
     } catch (error) {
         console.error('Error in signIn API:', error);
         return res.status(500).send({ success: false, message: "Internal Server Error", error: error.message });
@@ -124,24 +124,25 @@ const verifyOTPDriver = async (req, res) => {
     const { email, enteredOTP } = req.body;
 
     try {
-        const user = await DriverModel.findOne({ email });
+        const driver = await DriverModel.findOne({ email });
 
-        if (!user) {
+        if (!driver) {
             return res.json({
                 success: false,
                 message: `User not found with the given email: ${email}`,
             });
         }
 
-        if (user.otp !== enteredOTP) {
+        if (driver.otp !== enteredOTP) {
             return res.json({
                 success: false,
                 message: 'Entered OTP does not match!',
+                driver: driver
             });
         }
 
-        await DriverModel.findByIdAndUpdate(user._id, { otp: null });
-        res.json({ success: true, message: 'OTP verified successfully!' });
+        await DriverModel.findByIdAndUpdate(driver._id, { otp: null });
+        res.json({ success: true, message: 'OTP verified successfully!', driver: driver});
     } catch (error) {
         console.error('Error during OTP verification:', error);
         res.json({ success: false, message: 'Error during OTP verification' });
