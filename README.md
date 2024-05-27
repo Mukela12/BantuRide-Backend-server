@@ -5,10 +5,10 @@
 This guide will walk you through how to use the API for booking rides using frameworks such as Flutter, React Native, or any other frontend framework. The RideBooking API allows users to book rides, cancel bookings, request driver cancellations, and manage ride statuses. 
 
 ### NOTE to ENOS
-In the inital stages you have to save user ID when the user is signing to allow the user to make a request, also make sure to saving the bookingid (booking._id) after you receive a response from a successful booking request.
+In the inital stages you have to save user ID when the user is signing to allow the user to make a request, also make sure to saving the bookingid (booking._id) after you receive a response from a successful booking request. (bookingID (booking._id), userID (user._id), DriverID (driver._id)).
 
 ### NOTE TO GEORGE
-Also you will have to manage the IDs throughout the app for now (bookingID (booking._id), userID (user._id), DriverID (driver._id))
+Also you will have to manage the IDs throughout the app for now (bookingID (booking._id), userID (user._id), DriverID (driver._id)).
 
 ### Base URL
 The base URL for the RideBooking API is:
