@@ -477,6 +477,68 @@ const endRide = async (req, res) => {
   }
 };
 
-export { PassengerBookingRequest, cancelBooking, requestDriverCancellation, driverAtPickupLocation, assignDriverToBooking, startRide, searchDriversForBooking, endRide };
+const getDriverBooking = async (req, res) => {
+   const { driverId } = req.body;
+
+    try {
+      const driver = await DriverModel.findById(driverId);
+      if (!driver) {
+        return res.status(404).json({
+          success: false,
+          message: "Driver not found."
+        });
+      }
+      const booking = await Booking.findById(driver.bookingid);
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          message: "Booking Yet."
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        message: "Booking found.",
+        booking: booking
+      });
+    } catch (error) {
+      console.error("Error in getting driver booking:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error in getting driver booking.",
+        error: error.message || error,
+      });
+    }
+
+};
+
+const getDriverUser = async (req, res) => {
+
+  const { userId } = req.body;
+
+  try {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found."
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User found.",
+      user: user
+    });
+  } catch (error) {
+    console.error("Error in getting driver user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in getting driver user.",
+      error: error.message || error,
+    });
+  }
+
+};
+
+export { PassengerBookingRequest, cancelBooking, getDriverUser, getDriverBooking, requestDriverCancellation, driverAtPickupLocation, assignDriverToBooking, startRide, searchDriversForBooking, endRide };
 
 
