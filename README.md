@@ -10,6 +10,14 @@ In the inital stages you have to save user ID when the user is signing to allow 
 ### NOTE TO GEORGE
 Also you will have to manage the IDs throughout the app for now (bookingID (booking._id), userID (user._id), DriverID (driver._id)).
 
+
+<img width="1064" alt="Screenshot 2024-05-27 at 10 18 28" src="https://github.com/Mukela12/BantuRide-Backend-server/assets/65640620/e7f24ebd-dd47-47a2-a454-ed8ff664ecc9">
+
+
+
+
+
+
 ### Base URL
 The base URL for the RideBooking API is:
 
