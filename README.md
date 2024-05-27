@@ -8,7 +8,7 @@ This guide will walk you through how to use the API for booking rides using fram
 In the inital stages you have to save user ID when the user is signing to allow the user to make a request, also make sure to saving the bookingid (booking._id) after you receive a response from a successful booking request. (bookingID (booking._id), userID (user._id), DriverID (driver._id)).
 
 ### NOTE TO GEORGE
-Also you will have to manage the IDs throughout the app for now (bookingID (booking._id), userID (user._id), DriverID (driver._id)).
+Also you will have to manage the IDs throughout the app (bookingID (booking._id), userID (user._id), DriverID (driver._id)). You will save the driverID when the driver signs in this id is going to be provided in the response. 
 
 
 <img width="1064" alt="Screenshot 2024-05-27 at 10 18 28" src="https://github.com/Mukela12/BantuRide-Backend-server/assets/65640620/e7f24ebd-dd47-47a2-a454-ed8ff664ecc9">
