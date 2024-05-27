@@ -1,5 +1,6 @@
 import Booking from "../models/BookRideModel.js";
 import { DriverModel } from '../models/DriverModel.js';
+import { userModel } from "../models/UserModel.js";
 import socketServer from '../helpers/socketServer.js'; // Import the HTTP server instance
 
 import { Server } from 'socket.io';
@@ -513,11 +514,17 @@ const getDriverBooking = async (req, res) => {
 
 const getDriverUser = async (req, res) => {
 
-  const { userId } = req.body;
+  const { driverId } = req.body;
 
   try {
-    const user = await UserModel.findById(userId);
-    if (!user) {
+    const driver = await DriverModel.findById(driverId);
+
+    const booking = await Booking.findById(driver.bookingid);
+    
+    const user = await userModel.findById(booking.user);
+
+
+    if (!driver) {
       return res.status(404).json({
         success: false,
         message: "User not found."
