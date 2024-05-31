@@ -1,4 +1,4 @@
-import DriverModel from '../models/DriverModel.js';
+import { DriverModel } from '../models/DriverModel.js';
 
 // Edit driver profile
 export const editDriverProfile = async (req, res) => {
