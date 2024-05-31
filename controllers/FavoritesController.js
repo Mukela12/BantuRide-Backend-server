@@ -1,4 +1,4 @@
-import FavoriteLocation from '../models/FavoriteLocation';
+import FavoriteLocation from '../models/FavoriteLocation.js';
 
 // Add a new favorite location (home, work, other)
 export const addFavoriteLocation = async (req, res) => {
