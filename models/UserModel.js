@@ -44,6 +44,16 @@ const userSchema = new mongoose.Schema({
     enum: ["available", "unavailable"],
     default: "unavailable",
   },
+  notificationsEnabled: { 
+    type: Boolean, 
+    default: true,
+    required: false,
+  },
+  driverShouldCall: { 
+    type: Boolean, 
+    default: false,
+    required: false,
+  },
   ratings: [
     {
       rating: {
@@ -52,6 +62,17 @@ const userSchema = new mongoose.Schema({
         max: 5,
       },
       comment: String,
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  complaints: [
+    {
+      complaintText: {
+        type: String  
+      },
       createdAt: {
         type: Date,
         default: Date.now,

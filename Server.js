@@ -8,9 +8,12 @@ import http from 'http'; // Add http import
 
 import connectDB from "./config/db.js";
 
+import NotifcationsRoute from './routes/notifications';
+import favoriteRoutes from './routes/favorites';
 import userRoute from "./routes/AuthRoute.js";
 import Rides from "./routes/BookingRide.js";
 import PaymentRoute from "./routes/PaymentRoute.js";
+import ProfileRoute from "./routes/profileRoutes.js";
 import socketServer from "./helpers/socketServer.js";
 
 // configure dotenv
@@ -39,7 +42,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/auth", userRoute);
 app.use("/bookride", Rides);
 app.use('/payment', PaymentRoute);
-
+app.use('/favorites', favoriteRoutes);
+app.use('/profile', ProfileRoute);
+app.use('/notifications', NotifcationsRoute);
 
 app.head('/', (req, res) => {
     res.status(200).send();

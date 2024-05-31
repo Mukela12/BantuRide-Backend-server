@@ -297,3 +297,580 @@ final response = await http.get(
 
 final responseData = jsonDecode(response.body);
 ```
+
+
+
+
+
+
+
+## Favorites, Notifications and profiles
+
+
+### API Endpoints for Favorite Locations (USER)
+
+#### Add a Favorite Location 
+
+- **Endpoint:** `POST /favorites/add-favorites`
+- **Description:** Add a new favorite location for the user.
+- **Request Body (parameters):**
+  - `userId` (String): User's unique identifier (ObjectId).
+  - `type` (String): Type of location (`home`, `work`, `other`).
+  - `address` (String): Physical address of the location.
+  - `name` (String, optional): Custom name for the location.
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const addFavoriteLocation = async (userId, type, address, name) => {
+    try {
+        const response = await axios.post('https://banturide.onrender.com/favorites/add-favorites', {
+            userId,
+            type,
+            address,
+            name
+        });
+        console.log('Favorite Location Added:', response.data);
+    } catch (error) {
+        console.error('Error adding favorite location:', error);
+    }
+};
+```
+
+
+#### Get Favorite Locations (USER)
+
+- **Endpoint:** `GET /favorites/get-favorites`
+- **Description:** Retrieve all favorite locations for the user.
+- **Request Parameters:**
+  - `userId` (String): User's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+const getFavoriteLocations = async (userId) => {
+    try {
+        const response = await axios.get('https://banturide.onrender.com/favorites/get-favorites', {
+            params: { userId }
+        });
+        console.log('Favorite Locations:', response.data);
+    } catch (error) {
+        console.error('Error fetching favorite locations:', error);
+    }
+};
+```
+
+
+#### Update a Favorite Location (USER)
+
+- **Endpoint:** `PUT /favorites/update-favorites`
+- **Description:** Update an existing favorite location.
+- **Request Body:**
+  - `userId` (String): ID of the location to update.
+  - `address` (String, optional): New address.
+  - `name` (String, optional): New name.
+
+#### Example Request in React Native:
+```
+const updateFavoriteLocation = async (userId, address, name) => {
+    try {
+        const response = await axios.put('https://banturide.onrender.com/favorites/update-favorites', {
+            userId,
+            address,
+            name
+        });
+        console.log('Favorite Location Updated:', response.data);
+    } catch (error) {
+        console.error('Error updating favorite location:', error);
+    }
+};
+```
+
+#### Delete a Favorite Location (USER)
+
+- **Endpoint:** `DELETE /favorites/favorites`
+- **Description:** Delete a favorite location.
+- **Request Body:**
+  - `userId` (String): ID of the location to delete.
+
+#### Example Request in React Native:
+```
+const deleteFavoriteLocation = async (userId) => {
+    try {
+        const response = await axios.delete('https://banturide.onrender.com/favorites/favorites', {
+            data: { userId }
+        });
+        console.log('Favorite Location Deleted:', response.data);
+    } catch (error) {
+        console.error('Error deleting favorite location:', error);
+    }
+};
+```
+
+
+
+
+
+## API Endpoints for Driver Profile
+
+### Get Driver Information
+
+- **Endpoint:** `GET /profile/:driverId`
+- **Description:** Retrieve all information for a specific driver.
+- **Request Parameters:**
+  - `driverId` (String): Driver's unique identifier (ObjectId).
+
+#### Example Request in Dart (Flutter):
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> getDriverInfo(String driverId) async {
+  final url = 'https://banturide.onrender.com/profile/$driverId';
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final driverInfo = json.decode(response.body);
+      print('Driver Information: $driverInfo');
+    } else {
+      print('Error fetching driver information: ${response.body}');
+    }
+  } catch (error) {
+    print('Error fetching driver information: $error');
+  }
+}
+
+```
+
+
+### Edit Driver Profile
+
+- **Endpoint:** `PUT /profile/edit/:driverId`
+- **Description:** Edit the profile information of a specific driver.
+- **Request Body:**
+  - `firstName` (String): Driver's first name.
+  - `lastName` (String): Driver's last name.
+  - `dob` (String): Driver's date of birth.
+  - `email` (String): Driver's email address.
+  - `phoneNumber` (String): Driver's phone number.
+  - `nrcNumber` (String): Driver's NRC number.
+  - `address` (String): Driver's address.
+  - `vehicleInfo` (String): Information about the driver's vehicle.
+
+#### Example Request in Dart (Flutter):
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> editDriverProfile(String driverId, String firstName, String lastName, String dob, String email, String phoneNumber, String nrcNumber, String address, String vehicleInfo) async {
+  final url = 'https://banturide.onrender.com/profile/edit/$driverId';
+  try {
+    final response = await http.put(
+      Uri.parse(url),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({
+        'firstName': firstName,
+        'lastName': lastName,
+        'dob': dob,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'nrcNumber': nrcNumber,
+        'address': address,
+        'vehicleInfo': vehicleInfo,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final updatedDriver = json.decode(response.body);
+      print('Driver Profile Updated: $updatedDriver');
+    } else {
+      print('Error updating driver profile: ${response.body}');
+    }
+  } catch (error) {
+    print('Error updating driver profile: $error');
+  }
+}
+```
+
+### Toggle Driver Availability
+
+- **Endpoint:** `POST /profile/toggle-availability/:driverId`
+- **Description:** Toggle the availability status of a driver.
+- **Request Parameters:**
+  - `driverId` (String): Driver's unique identifier (ObjectId).
+
+#### Example Request in Dart (Flutter):
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> toggleDriverAvailability(String driverId) async {
+  final url = 'https://banturide.onrender.com/profile/toggle-availability/$driverId';
+  try {
+    final response = await http.post(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final updatedDriver = json.decode(response.body);
+      print('Driver Availability Toggled: $updatedDriver');
+    } else {
+      print('Error toggling driver availability: ${response.body}');
+    }
+  } catch (error) {
+    print('Error toggling driver availability: $error');
+  }
+}
+
+```
+
+
+
+
+## API Endpoints for User Profile
+
+### Get User Profile
+
+- **Endpoint:** `GET /profile/:userId`
+- **Description:** Retrieve the profile information for a specific user.
+- **Request Parameters:**
+  - `userId` (String): User's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const getUserProfile = async (userId) => {
+    try {
+        const response = await axios.get(`https://banturide.onrender.com/profile/${userId}`);
+        console.log('User Profile:', response.data);
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+    }
+};
+
+```
+
+
+### Edit User Profile
+
+- **Endpoint:** `PUT /profile/edit/:userId`
+- **Description:** Edit the profile information of a specific user.
+- **Request Body:**
+  - `firstname` (String): User's first name.
+  - `lastname` (String): User's last name.
+  - `email` (String): User's email address.
+  - `address` (String): User's address.
+  - `phoneNumber` (String): User's phone number.
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const editUserProfile = async (userId, firstname, lastname, email, address, phoneNumber) => {
+    try {
+        const response = await axios.put(`https://banturide.onrender.com/profile/edit/${userId}`, {
+            firstname,
+            lastname,
+            email,
+            address,
+            phoneNumber
+        });
+        console.log('User Profile Updated:', response.data);
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+    }
+};
+
+```
+
+### Toggle Notifications
+
+- **Endpoint:** `POST /profile/toggle-notifications/:userId`
+- **Description:** Toggle the notifications setting for a specific user.
+- **Request Parameters:**
+  - `userId` (String): User's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const toggleNotifications = async (userId) => {
+    try {
+        const response = await axios.post(`https://banturide.onrender.com/profile/toggle-notifications/${userId}`);
+        console.log('Notifications Toggled:', response.data);
+    } catch (error) {
+        console.error('Error toggling notifications:', error);
+    }
+};
+
+```
+
+### Toggle Driver Should Call
+
+- **Endpoint:** `POST /profile/toggle-driver-should-call/:userId`
+- **Description:** Toggle the "driver should call" setting for a specific user default set to ``` false ```.
+- **Request Parameters:**
+  - `userId` (String): User's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const toggleDriverShouldCall = async (userId) => {
+    try {
+        const response = await axios.post(`https://banturide.onrender.com/profile/toggle-driver-should-call/${userId}`);
+        console.log('Driver Should Call Toggled:', response.data);
+    } catch (error) {
+        console.error('Error toggling driver should call:', error);
+    }
+};
+```
+
+### Get Ride History
+
+- **Endpoint:** `GET /profile/ride-history/:userId`
+- **Description:** Retrieve the ride history for a specific user.
+- **Request Parameters:**
+  - `userId` (String): User's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const getRideHistory = async (userId) => {
+    try {
+        const response = await axios.get(`https://banturide.onrender.com/profile/ride-history/${userId}`);
+        console.log('Ride History:', response.data);
+    } catch (error) {
+        console.error('Error fetching ride history:', error);
+    }
+};
+
+```
+
+
+### File a Complaint
+
+- **Endpoint:** `POST /profile/complaint/:userId`
+- **Description:** File a complaint for a specific user.
+- **Request Body:**
+  - `complaintText` (String): The text of the complaint.
+
+#### Example Request in React Native:
+
+```
+import axios from 'axios';
+
+const fileComplaint = async (userId, complaintText) => {
+    try {
+        const response = await axios.post(`https://banturide.onrender.com/profile/complaint/${userId}`, {
+            complaintText
+        });
+        console.log('Complaint Filed:', response.data);
+    } catch (error) {
+        console.error('Error filing complaint:', error);
+    }
+};
+```
+
+
+
+# Notifications API (USER AND DRIVER)
+
+## API Base URL
+`https://banturide.onrender.com`
+
+## Notifications API
+
+### Overview
+
+This API allows users and drivers to manage their notifications. The endpoints support retrieving all notifications, unread notifications, read notifications, and marking notifications as read or unread.
+
+### API Endpoints
+
+#### Get All Notifications
+
+- **Endpoint:** `GET /notifications/all`
+- **Description:** Retrieve all notifications for a user or driver.
+- **Request Parameters:**
+  - `userId` (String, optional): User's unique identifier (ObjectId).
+  - `driverId` (String, optional): Driver's unique identifier (ObjectId).
+
+##### Example Request in React Native:
+```
+import axios from 'axios';
+
+const getAllNotifications = async (userId) => {
+    try {
+        const response = await axios.get('https://banturide.onrender.com/notifications/all', {
+            params: { userId }
+        });
+        console.log('All Notifications:', response.data);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+    }
+};
+
+```
+
+##### Example Request in DART (flutter):
+
+
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> getAllNotifications(String driverId) async {
+  final url = 'https://banturide.onrender.com/notifications/all?driverId=$driverId';
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notifications = json.decode(response.body);
+      print('All Notifications: $notifications');
+    } else {
+      print('Error fetching notifications: ${response.body}');
+    }
+  } catch (error) {
+    print('Error fetching notifications: $error');
+  }
+}
+
+ ```
+
+
+ ### Get Read Notifications
+
+- **Endpoint:** `GET /notifications/read`
+- **Description:** Retrieve read notifications for a user or driver.
+- **Request Parameters:**
+  - `userId` (String, optional): User's unique identifier (ObjectId).
+  - `driverId` (String, optional): Driver's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const getReadNotifications = async (userId) => {
+    try {
+        const response = await axios.get('https://banturide.onrender.com/notifications/read', {
+            params: { userId }
+        });
+        console.log('Read Notifications:', response.data);
+    } catch (error) {
+        console.error('Error fetching read notifications:', error);
+    }
+};
+```
+
+#### Example Request in DART (flutter):
+
+``` 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> getReadNotifications(String driverId) async {
+  final url = 'https://banturide.onrender.com/notifications/read?driverId=$driverId';
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notifications = json.decode(response.body);
+      print('Read Notifications: $notifications');
+    } else {
+      print('Error fetching read notifications: ${response.body}');
+    }
+  } catch (error) {
+    print('Error fetching read notifications: $error');
+  }
+}
+
+```
+
+
+### Mark Notification as Read
+
+- **Endpoint:** `PUT /notifications/read/:notificationId`
+- **Description:** Mark a specific notification as read.
+- **Request Parameters:**
+  - `notificationId` (String): Notification's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const markAsRead = async (notificationId) => {
+    try {
+        const response = await axios.put(`https://banturide.onrender.com/notifications/read/${notificationId}`);
+        console.log('Notification Marked as Read:', response.data);
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+};
+
+```
+
+#### Example Request in DART (flutter):
+
+
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> markAsRead(String notificationId) async {
+  final url = 'https://banturide.onrender.com/notifications/read/$notificationId';
+  try {
+    final response = await http.put(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notification = json.decode(response.body);
+      print('Notification Marked as Read: $notification');
+    } else {
+      print('Error marking notification as read: ${response.body}');
+    }
+  } catch (error) {
+    print('Error marking notification as read: $error');
+  }
+}
+
+```
+
+### Mark Notification as Unread
+
+- **Endpoint:** `PUT /notifications/unread/:notificationId`
+- **Description:** Mark a specific notification as unread.
+- **Request Parameters:**
+  - `notificationId` (String): Notification's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+
+```
+import axios from 'axios';
+
+const markAsUnread = async (notificationId) => {
+    try {
+        const response = await axios.put(`https://banturide.onrender.com/notifications/unread/${notificationId}`);
+        console.log('Notification Marked as Unread:', response.data);
+    } catch (error) {
+        console.error('Error marking notification as unread:', error);
+    }
+};
+
+```
+
+#### Example Request in DART (flutter):
+
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> markAsUnread(String notificationId) async {
+  final url = 'https://banturide.onrender.com/notifications/unread/$notificationId';
+  try {
+    final response = await http.put(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notification = json.decode(response.body);
+      print('Notification Marked as Unread: $notification');
+    } else {
+      print('Error marking notification as unread: ${response.body}');
+    }
+  } catch (error) {
+    print('Error marking notification as unread: $error');
+  }
+}
+
+```
