@@ -6,13 +6,13 @@ import {
     getRideHistory,
     fileComplaint,
     handleReferral
-} from '../controllers/ProfileControllerUSER';
+} from '../controllers/ProfileControllerUSER.js';
 
 import {
     editDriverProfile,
     toggleDriverAvailability,
     getDriverInfo
-} from '../controllers/DriverProfileController';
+} from '../controllers/DriverProfileController.js';
 
 const router = express.Router();
 
