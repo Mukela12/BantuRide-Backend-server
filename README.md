@@ -672,6 +672,10 @@ const fileComplaint = async (userId, complaintText) => {
 
 
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> acd0ad10449be17562f90e4a4ab7854c7569fffe
 # Notifications API (USER AND DRIVER)
 
 ## API Base URL
@@ -874,6 +878,7 @@ Future<void> markAsUnread(String notificationId) async {
 }
 
 ```
+<<<<<<< HEAD
 
 
 
@@ -1249,3 +1254,7 @@ const fileComplaint = async (userId, complaintText) => {
 
 
 
+=======
+=======
+>>>>>>> 5794035671bf80dd78e019c48511f230ebd72972
+>>>>>>> acd0ad10449be17562f90e4a4ab7854c7569fffe
