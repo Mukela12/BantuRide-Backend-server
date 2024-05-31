@@ -5,7 +5,7 @@ import {
     getReadNotifications,
     markAsRead,
     markAsUnread
-} from '../controllers/NotificationsController';
+} from '../controllers/NotificationsController.js';
 
 const router = express.Router();
 
