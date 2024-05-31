@@ -672,3 +672,208 @@ const fileComplaint = async (userId, complaintText) => {
 
 
 
+<<<<<<< HEAD
+# Notifications API (USER AND DRIVER)
+
+## API Base URL
+`https://banturide.onrender.com`
+
+## Notifications API
+
+### Overview
+
+This API allows users and drivers to manage their notifications. The endpoints support retrieving all notifications, unread notifications, read notifications, and marking notifications as read or unread.
+
+### API Endpoints
+
+#### Get All Notifications
+
+- **Endpoint:** `GET /notifications/all`
+- **Description:** Retrieve all notifications for a user or driver.
+- **Request Parameters:**
+  - `userId` (String, optional): User's unique identifier (ObjectId).
+  - `driverId` (String, optional): Driver's unique identifier (ObjectId).
+
+##### Example Request in React Native:
+```
+import axios from 'axios';
+
+const getAllNotifications = async (userId) => {
+    try {
+        const response = await axios.get('https://banturide.onrender.com/notifications/all', {
+            params: { userId }
+        });
+        console.log('All Notifications:', response.data);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+    }
+};
+
+```
+
+##### Example Request in DART (flutter):
+
+
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> getAllNotifications(String driverId) async {
+  final url = 'https://banturide.onrender.com/notifications/all?driverId=$driverId';
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notifications = json.decode(response.body);
+      print('All Notifications: $notifications');
+    } else {
+      print('Error fetching notifications: ${response.body}');
+    }
+  } catch (error) {
+    print('Error fetching notifications: $error');
+  }
+}
+
+ ```
+
+
+ ### Get Read Notifications
+
+- **Endpoint:** `GET /notifications/read`
+- **Description:** Retrieve read notifications for a user or driver.
+- **Request Parameters:**
+  - `userId` (String, optional): User's unique identifier (ObjectId).
+  - `driverId` (String, optional): Driver's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const getReadNotifications = async (userId) => {
+    try {
+        const response = await axios.get('https://banturide.onrender.com/notifications/read', {
+            params: { userId }
+        });
+        console.log('Read Notifications:', response.data);
+    } catch (error) {
+        console.error('Error fetching read notifications:', error);
+    }
+};
+```
+
+#### Example Request in DART (flutter):
+
+``` 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> getReadNotifications(String driverId) async {
+  final url = 'https://banturide.onrender.com/notifications/read?driverId=$driverId';
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notifications = json.decode(response.body);
+      print('Read Notifications: $notifications');
+    } else {
+      print('Error fetching read notifications: ${response.body}');
+    }
+  } catch (error) {
+    print('Error fetching read notifications: $error');
+  }
+}
+
+```
+
+
+### Mark Notification as Read
+
+- **Endpoint:** `PUT /notifications/read/:notificationId`
+- **Description:** Mark a specific notification as read.
+- **Request Parameters:**
+  - `notificationId` (String): Notification's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+```
+import axios from 'axios';
+
+const markAsRead = async (notificationId) => {
+    try {
+        const response = await axios.put(`https://banturide.onrender.com/notifications/read/${notificationId}`);
+        console.log('Notification Marked as Read:', response.data);
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+};
+
+```
+
+#### Example Request in DART (flutter):
+
+
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> markAsRead(String notificationId) async {
+  final url = 'https://banturide.onrender.com/notifications/read/$notificationId';
+  try {
+    final response = await http.put(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notification = json.decode(response.body);
+      print('Notification Marked as Read: $notification');
+    } else {
+      print('Error marking notification as read: ${response.body}');
+    }
+  } catch (error) {
+    print('Error marking notification as read: $error');
+  }
+}
+
+```
+
+### Mark Notification as Unread
+
+- **Endpoint:** `PUT /notifications/unread/:notificationId`
+- **Description:** Mark a specific notification as unread.
+- **Request Parameters:**
+  - `notificationId` (String): Notification's unique identifier (ObjectId).
+
+#### Example Request in React Native:
+
+```
+import axios from 'axios';
+
+const markAsUnread = async (notificationId) => {
+    try {
+        const response = await axios.put(`https://banturide.onrender.com/notifications/unread/${notificationId}`);
+        console.log('Notification Marked as Unread:', response.data);
+    } catch (error) {
+        console.error('Error marking notification as unread:', error);
+    }
+};
+
+```
+
+#### Example Request in DART (flutter):
+
+```
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> markAsUnread(String notificationId) async {
+  final url = 'https://banturide.onrender.com/notifications/unread/$notificationId';
+  try {
+    final response = await http.put(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final notification = json.decode(response.body);
+      print('Notification Marked as Unread: $notification');
+    } else {
+      print('Error marking notification as unread: ${response.body}');
+    }
+  } catch (error) {
+    print('Error marking notification as unread: $error');
+  }
+}
+
+```
+=======
+>>>>>>> 5794035671bf80dd78e019c48511f230ebd72972
