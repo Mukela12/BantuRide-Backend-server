@@ -1,5 +1,5 @@
-import userModel from '../models/UserModel';
-import Booking from '../models/BookRideModel';
+import userModel from '../models/UserModel.js';
+import Booking from '../models/BookRideModel.js';
 
 // Get user profile
 export const getUserProfile = async (req, res) => {
