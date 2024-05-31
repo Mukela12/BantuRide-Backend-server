@@ -1,4 +1,4 @@
-import userModel from '../models/UserModel.js';
+import { userModel } from "../models/UserModel.js";
 import Booking from '../models/BookRideModel.js';
 
 // Get user profile
