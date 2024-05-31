@@ -29,4 +29,6 @@ const favoriteLocationSchema = new mongoose.Schema({
   }
 });
 
-export const FavoriteLocationModel = mongoose.model('FavoriteLocation', favoriteLocationSchema);
+export const FavoriteLocation = mongoose.model('FavoriteLocation', favoriteLocationSchema);
+
+export default FavoriteLocation;
