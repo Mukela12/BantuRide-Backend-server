@@ -1,7 +1,7 @@
 import Booking from "../models/BookRideModel.js";
 import { DriverModel } from '../models/DriverModel.js';
 import { userModel } from "../models/UserModel.js";
-import { NotificationModel } from "../models/Notifications.js";
+import { NotificationModel } from "../models/Notification.js";
 import socketServer from '../helpers/socketServer.js'; // Import the HTTP server instance
 
 import { Server } from 'socket.io';
