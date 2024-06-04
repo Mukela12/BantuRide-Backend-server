@@ -8,8 +8,8 @@ import http from 'http'; // Add http import
 
 import connectDB from "./config/db.js";
 
-import NotifcationsRoute from './routes/notifications.js';
-import favoriteRoutes from './routes/favorites.js';
+import NotifcationsRoute from './routes/notifications';
+import favoriteRoutes from './routes/favorites';
 import userRoute from "./routes/AuthRoute.js";
 import Rides from "./routes/BookingRide.js";
 import PaymentRoute from "./routes/PaymentRoute.js";
@@ -31,7 +31,6 @@ const PORT = 3004;
 // Set up Socket.IO server
 socketServer(server);
 
-
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -50,14 +49,11 @@ app.head('/', (req, res) => {
     res.status(200).send();
 });
 
-
 app.get('/', (req, res) => {
     res.status(200).send('Server is running!');
 });
-
 
 // run server
 server.listen(PORT, () => { 
     console.log(`Server is running on port ${PORT}`)
 });
-
