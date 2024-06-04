@@ -9,7 +9,7 @@ import http from 'http'; // Add http import
 import connectDB from "./config/db.js";
 
 import NotifcationsRoute from './routes/notifications.js';
-import favoriteRoutes from './routes/favorites';
+import favoriteRoutes from './routes/favorites.js';
 import userRoute from "./routes/AuthRoute.js";
 import Rides from "./routes/BookingRide.js";
 import PaymentRoute from "./routes/PaymentRoute.js";
