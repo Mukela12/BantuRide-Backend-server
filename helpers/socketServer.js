@@ -1,27 +1,37 @@
 import { Server } from "socket.io";
 import { DriverModel } from "../models/DriverModel.js";
+import { NotificationModel } from "../models/Notifications.js";
 
 const socketServer = (server) => {
-  const io = new Server(server);
+  const io = new Server(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
 
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    // Listen for changes in driver availability
-    const driverChangeStream = DriverModel.watch();
-    driverChangeStream.on("change", (change) => {
-      if (change.operationType === "update") {
-        const updatedDriver = change.fullDocument;
-        if (updatedDriver.driverStatus === "available") {
-          io.emit("driverAvailable", updatedDriver);
-        }
-      }
+    // Listen for driver available notifications
+    socket.on("driverAvailable", async (data) => {
+      const { userId, driverId } = data;
+
+      // Notify the user
+      const notification = new NotificationModel({
+        userId,
+        driverId,
+        title: 'Driver Available',
+        message: 'A driver is available for your ride.',
+      });
+      await notification.save();
+
+      io.to(userId).emit("notification", notification);
     });
 
     // Disconnect event
     socket.on("disconnect", () => {
       console.log("A user disconnected");
-      driverChangeStream.close();
     });
   });
 };
