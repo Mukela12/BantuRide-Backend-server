@@ -875,3 +875,69 @@ Future<void> markAsUnread(String notificationId) async {
 }
 
 ```
+
+
+
+
+
+
+
+## Integrating Socket.IO for Real-Time Notifications in React Native
+
+ENOS! This guide will walk you through the steps to integrate Socket.IO into your React Native application to receive real-time notifications for events such as driver availability and booking confirmations. The notifications will be sent from the backend and received in the frontend, allowing you to handle these events in real-time.
+
+### Install Socket.IO Client
+
+First, you need to install the Socket.IO client library in your React Native project. Run the following command in your project directory:
+
+```
+npm install socket.io-client
+```
+
+
+Example code: 
+
+```
+import React, { useEffect } from 'react';
+import { Alert } from 'react-native';
+import io from 'socket.io-client';
+
+const Notifications = () => {
+  // Connect to Socket.IO server
+  const socket = io('https://banturide.onrender.com');
+
+  useEffect(() => {
+    // Listen for notifications
+    socket.on('notification', (data) => {
+      console.log('Notification received:', data);
+      // Handle the notification (e.g., show a toast, update state, etc.)
+      Alert.alert('Notification', data.message);
+    });
+
+    // Listen for specific events
+    socket.on('driversAvailable', (data) => {
+      console.log('Drivers available:', data);
+      // Update state with available drivers
+      Alert.alert('Drivers Available', 'More drivers are available in your area.');
+    });
+
+    socket.on('bookingConfirmed', (data) => {
+      console.log('Booking confirmed:', data);
+      // Handle booking confirmation
+      Alert.alert('Booking Confirmed', 'Your booking has been confirmed with a driver.');
+    });
+
+    // Clean up the connection when the component unmounts
+    return () => {
+      socket.off('notification');
+      socket.off('driversAvailable');
+      socket.off('bookingConfirmed');
+    };
+  }, []);
+
+  return null;
+};
+
+export default Notifications;
+```
+
