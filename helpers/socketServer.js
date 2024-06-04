@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { DriverModel } from "../models/DriverModel.js";
-import { NotificationModel } from "../models/Notifications.js";
+import { NotificationModel } from "../models/Notification.js";
 
 const socketServer = (server) => {
   const io = new Server(server, {
