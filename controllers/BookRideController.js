@@ -1,6 +1,7 @@
 import Booking from "../models/BookRideModel.js";
 import { DriverModel } from '../models/DriverModel.js';
 import { userModel } from "../models/UserModel.js";
+import { NotificationModel } from "../models/Notifications.js";
 import socketServer from '../helpers/socketServer.js'; // Import the HTTP server instance
 
 import { Server } from 'socket.io';
@@ -9,11 +10,7 @@ import express from 'express';
 
 const app = express();
 const server = http.createServer(app); // Create an HTTP server instance
-
-
-
 const io = new Server(socketServer(server));
-
 
 // Controller to handle initial booking request
 const PassengerBookingRequest = async (req, res) => {
@@ -49,7 +46,10 @@ const PassengerBookingRequest = async (req, res) => {
 
   try {
     await newBooking.save();
-    
+
+    // Emit event to notify user of successful booking
+    io.emit('bookingRequestReceived', { user: newBooking.user });
+
     // Respond with the booking details immediately after saving
     return res.status(200).json({
       success: true,
@@ -62,62 +62,6 @@ const PassengerBookingRequest = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error in booking a ride.",
-      error: error.message || error,
-    });
-  }
-};
-
-
-/**
- * Finds available drivers within a specified radius from a given point.
- * 
- * @param {Array<number>} centerCoordinates - The longitude and latitude of the center point [longitude, latitude].
- * @param {number} radiusMiles - The radius in miles within which to find available drivers.
- * @returns {Promise<Array>} - A promise that resolves to an array of available drivers.
- */
-async function findAvailableDriversWithinRadius(centerCoordinates, radiusMiles) {
-  const radiusInMeters = radiusMiles * 1609.34; // Convert miles to meters
-
-  try {
-    const drivers = await DriverModel.find({
-      location: {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: centerCoordinates
-          },
-          $maxDistance: radiusInMeters
-        }
-      },
-      driverStatus: "available"
-    }).exec();
-
-    return drivers;
-  } catch (error) {
-    console.error("Error finding available drivers within radius:", error);
-    throw error;
-  }
-}
-
-
-
-const searchDriversForBooking = async (req, res) => {
-  const { bookingId } = req.body;
-  
-  try {
-    const booking = await Booking.findById(bookingId);
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: "Booking not found."
-      });
-    }
-    await searchAndSendAvailableDrivers(booking, res);
-  } catch (error) {
-    console.error("Error in searching drivers for booking:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error in processing your request.",
       error: error.message || error,
     });
   }
@@ -141,6 +85,15 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
             vehicleInfo: driver.vehicleInfo
           }))
         });
+
+        // Notify user with the available drivers
+        const notification = new NotificationModel({
+          userId: booking.user,
+          title: 'Drivers Available',
+          message: 'More drivers are available in your area.',
+        });
+        await notification.save();
+        io.emit('notification', notification);
 
         // Respond to the HTTP request with the available drivers
         res.status(200).json({
@@ -181,13 +134,10 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
   }, 60000); // 1 minute
 };
 
-
 // Function to assign a selected driver to the booking
 const assignDriverToBooking = async (req, res) => {
-
   const { bookingId, driverId } = req.body;
 
-  
   try {
     const booking = await Booking.findById(bookingId);
     const driver = await DriverModel.findById(driverId);
@@ -207,7 +157,7 @@ const assignDriverToBooking = async (req, res) => {
     driver.driverStatus = 'unavailable';
     await driver.save();
 
-    // Emit booking confirmation event to user
+    // Emit booking confirmation event to user and driver
     io.emit('bookingConfirmed', {
       bookingId: booking._id,
       driver: {
@@ -217,6 +167,26 @@ const assignDriverToBooking = async (req, res) => {
         vehicleInfo: driver.vehicleInfo
       }
     });
+
+    // Notify the user and the driver
+    const userNotification = new NotificationModel({
+      userId: booking.user,
+      driverId: driver._id,
+      title: 'Booking Confirmed',
+      message: 'Your booking has been confirmed with a driver.',
+    });
+    await userNotification.save();
+
+    const driverNotification = new NotificationModel({
+      userId: booking.user,
+      driverId: driver._id,
+      title: 'Booking Assigned',
+      message: 'A booking has been assigned to you.',
+    });
+    await driverNotification.save();
+
+    io.emit('notification', userNotification);
+    io.emit('notification', driverNotification);
 
     return res.status(200).json({
       success: true,
