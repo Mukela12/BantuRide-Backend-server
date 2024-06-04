@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { DriverModel } from "../models/DriverModel.js";
-import { NotificationModel } from "../models/Notification.js";
+import { Notification } from "../models/Notification.js";
 
 const socketServer = (server) => {
   const io = new Server(server, {
@@ -18,7 +18,7 @@ const socketServer = (server) => {
       const { userId, driverId } = data;
 
       // Notify the user
-      const notification = new NotificationModel({
+      const notification = new Notification({
         userId,
         driverId,
         title: 'Driver Available',
