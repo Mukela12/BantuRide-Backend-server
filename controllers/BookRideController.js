@@ -67,6 +67,62 @@ const PassengerBookingRequest = async (req, res) => {
   }
 };
 
+
+/**
+ * Finds available drivers within a specified radius from a given point.
+ * 
+ * @param {Array<number>} centerCoordinates - The longitude and latitude of the center point [longitude, latitude].
+ * @param {number} radiusMiles - The radius in miles within which to find available drivers.
+ * @returns {Promise<Array>} - A promise that resolves to an array of available drivers.
+ */
+async function findAvailableDriversWithinRadius(centerCoordinates, radiusMiles) {
+  const radiusInMeters = radiusMiles * 1609.34; // Convert miles to meters
+
+  try {
+    const drivers = await DriverModel.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: centerCoordinates
+          },
+          $maxDistance: radiusInMeters
+        }
+      },
+      driverStatus: "available"
+    }).exec();
+
+    return drivers;
+  } catch (error) {
+    console.error("Error finding available drivers within radius:", error);
+    throw error;
+  }
+}
+
+
+
+const searchDriversForBooking = async (req, res) => {
+  const { bookingId } = req.body;
+  
+  try {
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found."
+      });
+    }
+    await searchAndSendAvailableDrivers(booking, res);
+  } catch (error) {
+    console.error("Error in searching drivers for booking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in processing your request.",
+      error: error.message || error,
+    });
+  }
+};
+
 const searchAndSendAvailableDrivers = async (booking, res) => {
   let searchComplete = false;
   let intervalId = null;
