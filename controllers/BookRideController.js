@@ -1,7 +1,7 @@
 import Booking from "../models/BookRideModel.js";
 import { DriverModel } from '../models/DriverModel.js';
 import { userModel } from "../models/UserModel.js";
-import { NotificationModel } from "../models/Notification.js";
+import { Notification } from "../models/Notification.js";
 import socketServer from '../helpers/socketServer.js'; // Import the HTTP server instance
 
 import { Server } from 'socket.io';
@@ -87,7 +87,7 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
         });
 
         // Notify user with the available drivers
-        const notification = new NotificationModel({
+        const notification = new Notification({
           userId: booking.user,
           title: 'Drivers Available',
           message: 'More drivers are available in your area.',
@@ -169,7 +169,7 @@ const assignDriverToBooking = async (req, res) => {
     });
 
     // Notify the user and the driver
-    const userNotification = new NotificationModel({
+    const userNotification = new Notification({
       userId: booking.user,
       driverId: driver._id,
       title: 'Booking Confirmed',
@@ -177,7 +177,7 @@ const assignDriverToBooking = async (req, res) => {
     });
     await userNotification.save();
 
-    const driverNotification = new NotificationModel({
+    const driverNotification = new Notification({
       userId: booking.user,
       driverId: driver._id,
       title: 'Booking Assigned',
