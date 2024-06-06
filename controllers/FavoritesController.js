@@ -13,7 +13,7 @@ export const addFavoriteLocation = async (req, res) => {
 };
 
 export const getFavoriteLocations = async (req, res) => {
-    const { userId } = req.body;
+    const { userId } = req.params;
     try {
         const favoriteLocations = await FavoriteLocation.find({ userId });
         res.status(200).json(favoriteLocations);
