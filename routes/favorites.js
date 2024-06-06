@@ -4,7 +4,7 @@ import { addFavoriteLocation, getFavoriteLocations, updateFavoriteLocation, dele
 const router = express.Router();
 
 router.post('/add-favorites', addFavoriteLocation);
-router.get('/get-favorites', getFavoriteLocations);
+router.get('/get-favorites/:userId', getFavoriteLocations);  // Add userId param
 router.put('/update-favorites', updateFavoriteLocation);
 router.delete('/favorites', deleteFavoriteLocation);
 
