@@ -26,10 +26,10 @@ export const editProfile = async (req, res) => {
 
 // Toggle notifications for user
 export const toggleNotifications = async (req, res) => {
-    const { userId } = req.params;
+    const { userId, value } = req.params;
     try {
         const user = await userModel.findById(userId);
-        user.notificationsEnabled = !user.notificationsEnabled;
+        user.notificationsEnabled = value;
         await user.save();
         res.status(200).json(user);
     } catch (error) {
@@ -39,10 +39,10 @@ export const toggleNotifications = async (req, res) => {
 
 // Toggle driver should call
 export const toggleDriverShouldCall = async (req, res) => {
-    const { userId } = req.params;
+    const { userId, value } = req.params;
     try {
         const user = await userModel.findById(userId);
-        user.driverShouldCall = !user.driverShouldCall;
+        user.driverShouldCall = value;
         await user.save();
         res.status(200).json(user);
     } catch (error) {
