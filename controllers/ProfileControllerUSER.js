@@ -100,7 +100,7 @@ export const toggleNotifications = async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        user.notificationsEnabled = value === 'true';
+        user.notificationsEnabled = value === true;
         await user.save();
 
         res.status(200).json(user);
@@ -119,7 +119,7 @@ export const toggleDriverShouldCall = async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        user.driverShouldCall = value === 'true';
+        user.driverShouldCall = value === true;
         await user.save();
 
         res.status(200).json(user);
