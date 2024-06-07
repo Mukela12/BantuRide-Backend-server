@@ -522,10 +522,28 @@ Future<void> toggleDriverAvailability(String driverId) async {
 
 
 
-### ENOS PROFILE USER ENDPOINTS
+# ENOS PROFILE USER ENDPOINTS
 
+## Introduction
 
-## Base URL 
+This guide will walk you through the profile-related endpoints provided by BantuRide API. The examples provided are in React Native.
+
+## Table of Contents
+
+1. [Base URL](#base-url)
+2. [Profile Endpoints](#profile-endpoints)
+    1. [Get User Profile](#1-get-user-profile)
+    2. [Edit User's Name](#2-edit-users-name)
+    3. [Edit User's Email](#3-edit-users-email)
+    4. [Upload Profile Picture](#4-upload-profile-picture)
+    5. [Remove Profile Picture](#5-remove-profile-picture)
+    6. [Toggle Notifications](#6-toggle-notifications)
+    7. [Toggle Driver Should Call](#7-toggle-driver-should-call)
+    8. [Get Ride History](#8-get-ride-history)
+    9. [File a Complaint](#9-file-a-complaint)
+    10. [Handle Referrals](#10-handle-referrals)
+
+## Base URL
 
 The base URL for the BantuRide API is:
 ```
@@ -535,6 +553,7 @@ https://banturide.onrender.com
 ## Profile Endpoints
 
 ### 1. Get User Profile
+
 To retrieve the user profile information.
 
 **Endpoint:** `GET /profile/:userId`
@@ -543,8 +562,8 @@ To retrieve the user profile information.
 - `userId` (string): ID of the user
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/profile/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/profile/{userId}', {
   method: 'GET',
   headers: {
     'Content-Type': 'application/json',
@@ -555,6 +574,7 @@ console.log(responseData);
 ```
 
 ### 2. Edit User's Name
+
 To edit the user's first and last name.
 
 **Endpoint:** `POST /profile/name/:userId`
@@ -567,8 +587,8 @@ To edit the user's first and last name.
 - `lastname` (string): New last name
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/profile/name/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/profile/name/{userId}', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -583,6 +603,7 @@ console.log(responseData);
 ```
 
 ### 3. Edit User's Email
+
 To edit the user's email address.
 
 **Endpoint:** `POST /profile/email/:userId`
@@ -594,8 +615,8 @@ To edit the user's email address.
 - `email` (string): New email address
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/profile/email/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/profile/email/{userId}', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -609,6 +630,7 @@ console.log(responseData);
 ```
 
 ### 4. Upload Profile Picture
+
 To upload a profile picture.
 
 **Endpoint:** `POST /profile/upload/:userId`
@@ -620,8 +642,8 @@ To upload a profile picture.
 - `image` (string): Base64 string of the image or image URL
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/profile/upload/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/profile/upload/{userId}', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -635,6 +657,7 @@ console.log(responseData);
 ```
 
 ### 5. Remove Profile Picture
+
 To remove the profile picture.
 
 **Endpoint:** `DELETE /profile/remove/:userId`
@@ -643,8 +666,8 @@ To remove the profile picture.
 - `userId` (string): ID of the user
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/profile/remove/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/profile/remove/{userId}', {
   method: 'DELETE',
   headers: {
     'Content-Type': 'application/json',
@@ -655,6 +678,7 @@ console.log(responseData);
 ```
 
 ### 6. Toggle Notifications
+
 To toggle notification settings for the user.
 
 **Endpoint:** `POST /toggle-notifications/:userId/:value`
@@ -664,8 +688,8 @@ To toggle notification settings for the user.
 - `value` (boolean): `true` or `false` to enable or disable notifications
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/toggle-notifications/123456/true', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/toggle-notifications/{userId}/true', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -676,6 +700,7 @@ console.log(responseData);
 ```
 
 ### 7. Toggle Driver Should Call
+
 To toggle whether the driver should call the user.
 
 **Endpoint:** `POST /toggle-driver-should-call/:userId/:value`
@@ -685,8 +710,8 @@ To toggle whether the driver should call the user.
 - `value` (boolean): `true` or `false` to enable or disable driver call
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/toggle-driver-should-call/123456/true', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/toggle-driver-should-call/{userId}/true', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -697,6 +722,7 @@ console.log(responseData);
 ```
 
 ### 8. Get Ride History
+
 To get the ride history of the user.
 
 **Endpoint:** `GET /ride-history/:userId`
@@ -705,8 +731,8 @@ To get the ride history of the user.
 - `userId` (string): ID of the user
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/ride-history/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/ride-history/{userId}', {
   method: 'GET',
   headers: {
     'Content-Type': 'application/json',
@@ -717,6 +743,7 @@ console.log(responseData);
 ```
 
 ### 9. File a Complaint
+
 To file a complaint.
 
 **Endpoint:** `POST /complaint/:userId`
@@ -728,8 +755,8 @@ To file a complaint.
 - `complaintText` (string): Text of the complaint
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/complaint/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/complaint/{userId}', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -743,6 +770,7 @@ console.log(responseData);
 ```
 
 ### 10. Handle Referrals
+
 To handle referrals.
 
 **Endpoint:** `POST /referral/:userId`
@@ -754,8 +782,8 @@ To handle referrals.
 - `referralCode` (string): Referral code
 
 **Example Request (React Native):**
-```
-const response = await fetch('https://banturide.onrender.com/referral/123456', {
+```javascript
+const response = await fetch('https://banturide.onrender.com/referral/{userId}', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -768,6 +796,9 @@ const responseData = await response.json();
 console.log(responseData);
 ```
 
+## Conclusion
+
+This documentation provides a comprehensive guide on how to interact with the profile-related endpoints of the BantuRide backend server using React Native. For any further questions or support, please refer to our official documentation or contact our support team.
 By following this documentation, frontend developers can effectively integrate the BantuRide API into their applications to manage user profiles seamlessly.
 
 
