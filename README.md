@@ -524,9 +524,6 @@ Future<void> toggleDriverAvailability(String driverId) async {
 
 # ENOS PROFILE USER ENDPOINTS
 
-## Introduction
-
-This guide will walk you through the profile-related endpoints provided by BantuRide API. The examples provided are in React Native.
 
 ## Table of Contents
 
