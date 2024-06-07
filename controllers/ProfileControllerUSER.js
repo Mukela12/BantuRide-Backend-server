@@ -12,12 +12,24 @@ export const getUserProfile = async (req, res) => {
     }
 }
 
-// Edit user profile
-export const editProfile = async (req, res) => {
+// Edit user's name
+export const editUserName = async (req, res) => {
     const { userId } = req.params;
-    const { firstname, lastname, email, address, phoneNumber } = req.body;
+    const { firstname, lastname } = req.body;
     try {
-        const user = await userModel.findByIdAndUpdate(userId, { firstname, lastname, email, address, phoneNumber }, { new: true });
+        const user = await userModel.findByIdAndUpdate(userId, { firstname, lastname }, { new: true });
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Edit user's email
+export const editUserEmail = async (req, res) => {
+    const { userId } = req.params;
+    const { email } = req.body;
+    try {
+        const user = await userModel.findByIdAndUpdate(userId, { email }, { new: true });
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -60,7 +72,6 @@ export const getRideHistory = async (req, res) => {
     }
 };
 
-
 // File a complaint
 export const fileComplaint = async (req, res) => {
     const { userId } = req.params;
@@ -80,7 +91,7 @@ export const handleReferral = async (req, res) => {
     const { userId } = req.params;
     const { referralCode } = req.body;
     try {
-        const user = await User.findById(userId);
+        const user = await userModel.findById(userId);
         user.referrals.push({ referralCode, createdAt: new Date() });
         await user.save();
         res.status(200).json(user.referrals);
@@ -88,3 +99,4 @@ export const handleReferral = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
