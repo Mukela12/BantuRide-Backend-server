@@ -4,7 +4,7 @@ import cloudinary from '../helpers/cloudinaryConfig.js';
 
 // Get user profile
 export const getUserProfile = async (req, res) => {
-    const { userId } = req.params;
+    const { userId } = req.body;
     try {
         const user = await userModel.findById(userId);
         if (!user) {
@@ -18,8 +18,7 @@ export const getUserProfile = async (req, res) => {
 
 // Upload profile picture
 export const uploadProfilePicture = async (req, res) => {
-    const { userId } = req.params;
-    const { image } = req.body; // Assuming image URL or base64 string is sent in the body
+    const { userId, image } = req.body; // Assuming image URL or base64 string is sent in the body
 
     try {
         const uploadResponse = await cloudinary.uploader.upload(image, { public_id: `profile_${userId}` });
@@ -37,7 +36,7 @@ export const uploadProfilePicture = async (req, res) => {
 
 // Remove profile picture
 export const removeProfilePicture = async (req, res) => {
-    const { userId } = req.params;
+    const { userId } = req.body;
 
     try {
         const user = await userModel.findById(userId);
@@ -61,8 +60,7 @@ export const removeProfilePicture = async (req, res) => {
 
 // Edit user's name
 export const editUserName = async (req, res) => {
-    const { userId } = req.params;
-    const { firstname, lastname } = req.body;
+    const { userId, firstname, lastname } = req.body;
 
     try {
         const user = await userModel.findByIdAndUpdate(userId, { firstname, lastname }, { new: true });
@@ -78,8 +76,7 @@ export const editUserName = async (req, res) => {
 
 // Edit user's email
 export const editUserEmail = async (req, res) => {
-    const { userId } = req.params;
-    const { email } = req.body;
+    const { email, userId } = req.body;
 
     try {
         const user = await userModel.findByIdAndUpdate(userId, { email }, { new: true });
@@ -95,7 +92,7 @@ export const editUserEmail = async (req, res) => {
 
 // Toggle notifications for user
 export const toggleNotifications = async (req, res) => {
-    const { userId, value } = req.params;
+    const { userId, value } = req.body;
 
     try {
         const user = await userModel.findById(userId);
@@ -114,7 +111,7 @@ export const toggleNotifications = async (req, res) => {
 
 // Toggle driver should call
 export const toggleDriverShouldCall = async (req, res) => {
-    const { userId, value } = req.params;
+    const { userId, value } = req.body;
 
     try {
         const user = await userModel.findById(userId);
@@ -133,7 +130,7 @@ export const toggleDriverShouldCall = async (req, res) => {
 
 // Get ride history
 export const getRideHistory = async (req, res) => {
-    const { userId } = req.params;
+    const { userId } = req.body;
 
     try {
         const bookings = await Booking.find({ user: userId });
@@ -149,7 +146,7 @@ export const getRideHistory = async (req, res) => {
 
 // File a complaint
 export const fileComplaint = async (req, res) => {
-    const { userId } = req.params;
+    const { userId } = req.body;
     const { complaintText } = req.body;
 
     try {
