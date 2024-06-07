@@ -10,7 +10,7 @@ import express from 'express';
 
 const app = express();
 const server = http.createServer(app); // Create an HTTP server instance
-const io = new Server(socketServer(server));
+const { io, emitToUser } = socketServer(server);
 
 // Controller to handle initial booking request
 const PassengerBookingRequest = async (req, res) => {
@@ -47,9 +47,6 @@ const PassengerBookingRequest = async (req, res) => {
   try {
     await newBooking.save();
 
-    // Emit event to notify user of successful booking
-    io.emit('bookingRequestReceived', { user: newBooking.user });
-
     // Respond with the booking details immediately after saving
     return res.status(200).json({
       success: true,
@@ -66,7 +63,6 @@ const PassengerBookingRequest = async (req, res) => {
     });
   }
 };
-
 
 /**
  * Finds available drivers within a specified radius from a given point.
@@ -99,8 +95,6 @@ async function findAvailableDriversWithinRadius(centerCoordinates, radiusMiles) 
   }
 }
 
-
-
 const searchDriversForBooking = async (req, res) => {
   const { bookingId } = req.body;
   
@@ -112,7 +106,36 @@ const searchDriversForBooking = async (req, res) => {
         message: "Booking not found."
       });
     }
+
+    // Start listening to driver updates during the search
+    const driverChangeStream = DriverModel.watch();
+    driverChangeStream.on("change", async (change) => {
+      if (change.operationType === "update" && change.fullDocument.driverStatus === "available") {
+        const drivers = await findAvailableDriversWithinRadius(
+          [booking.pickUpLocation.longitude, booking.pickUpLocation.latitude],
+          3
+        );
+
+        // Emit the updated list of available drivers to the specific user
+        emitToUser(booking.user.toString(), 'driversAvailable', {
+          bookingId: booking._id,
+          drivers: drivers.map(driver => ({
+            _id: driver._id,
+            firstName: driver.firstName,
+            lastName: driver.lastName,
+            vehicleInfo: driver.vehicleInfo
+          }))
+        });
+      }
+    });
+
+    // Notify user with the initial available drivers
     await searchAndSendAvailableDrivers(booking, res);
+
+    // Stop listening after 1 minute
+    setTimeout(() => {
+      driverChangeStream.close();
+    }, 60000); // 1 minute
   } catch (error) {
     console.error("Error in searching drivers for booking:", error);
     return res.status(500).json({
@@ -132,7 +155,7 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
       const drivers = await findAvailableDriversWithinRadius([booking.pickUpLocation.longitude, booking.pickUpLocation.latitude], 3);
       if (drivers && drivers.length > 0) {
         // Emit event with all available drivers and stop the search
-        io.emit('driversAvailable', {
+        emitToUser(booking.user.toString(), 'driversAvailable', {
           bookingId: booking._id,
           drivers: drivers.map(driver => ({
             _id: driver._id,
@@ -149,7 +172,7 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
           message: 'More drivers are available in your area.',
         });
         await notification.save();
-        io.emit('notification', notification);
+        emitToUser(booking.user.toString(), 'notification', notification);
 
         // Respond to the HTTP request with the available drivers
         res.status(200).json({
@@ -165,7 +188,7 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
       console.error("Error searching for available drivers:", error);
       if (!searchComplete) {
         clearInterval(intervalId);
-        io.emit('noDriversAvailable', { bookingId: booking._id });
+        emitToUser(booking.user.toString(), 'noDriversAvailable', { bookingId: booking._id });
         res.status(500).json({
           success: false,
           message: "Error searching for drivers.",
@@ -181,7 +204,7 @@ const searchAndSendAvailableDrivers = async (booking, res) => {
   setTimeout(() => {
     if (!searchComplete) {
       clearInterval(intervalId);
-      io.emit('noDriversAvailable', { bookingId: booking._id });
+      emitToUser(booking.user.toString(), 'noDriversAvailable', { bookingId: booking._id });
       res.status(404).json({
         success: false,
         message: "No drivers found."
