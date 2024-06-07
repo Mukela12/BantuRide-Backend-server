@@ -1,6 +1,10 @@
 import express from 'express';
 import {
-    editProfile,
+    getUserProfile,
+    editUserName,
+    editUserEmail,
+    uploadProfilePicture,
+    removeProfilePicture,
     toggleNotifications,
     toggleDriverShouldCall,
     getRideHistory,
@@ -20,12 +24,13 @@ const router = express.Router();
 router.get('/profile/:userId', getUserProfile);
 router.post('/profile/name/:userId', editUserName);
 router.post('/profile/email/:userId', editUserEmail);
+router.post('/profile/upload/:userId', uploadProfilePicture);
+router.delete('/profile/remove/:userId', removeProfilePicture);
 router.post('/toggle-notifications/:userId/:value', toggleNotifications);
 router.post('/toggle-driver-should-call/:userId/:value', toggleDriverShouldCall);
 router.get('/ride-history/:userId', getRideHistory);
 router.post('/complaint/:userId', fileComplaint);
 router.post('/referral/:userId', handleReferral);
-
 
 // Define routes DRIVERS
 router.put('/edit/:driverId', editDriverProfile);
