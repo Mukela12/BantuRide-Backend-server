@@ -22,15 +22,15 @@ const router = express.Router();
 
 // Define routes USERS
 router.get('/profile/:userId', getUserProfile);
-router.post('/profile/name/:userId', editUserName);
-router.post('/profile/email/:userId', editUserEmail);
-router.post('/profile/upload/:userId', uploadProfilePicture);
-router.delete('/profile/remove/:userId', removeProfilePicture);
-router.post('/toggle-notifications/:userId/:value', toggleNotifications);
-router.post('/toggle-driver-should-call/:userId/:value', toggleDriverShouldCall);
-router.get('/ride-history/:userId', getRideHistory);
-router.post('/complaint/:userId', fileComplaint);
-router.post('/referral/:userId', handleReferral);
+router.post('/profile/name', editUserName);
+router.post('/profile/email', editUserEmail);
+router.post('/profile/upload', uploadProfilePicture);
+router.delete('/profile/remove', removeProfilePicture);
+router.post('/toggle-notifications', toggleNotifications);
+router.post('/toggle-driver-should-call', toggleDriverShouldCall);
+router.get('/ride-history', getRideHistory);
+router.post('/complaint', fileComplaint);
+router.post('/referral', handleReferral);
 
 // Define routes DRIVERS
 router.put('/edit/:driverId', editDriverProfile);
