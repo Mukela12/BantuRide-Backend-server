@@ -17,9 +17,11 @@ import {
 const router = express.Router();
 
 // Define routes USERS
-router.put('/edit/:userId', editProfile);
-router.post('/toggle-notifications/:userId', toggleNotifications);
-router.post('/toggle-driver-should-call/:userId', toggleDriverShouldCall);
+router.get('/profile/:userId', getUserProfile);
+router.post('/profile/name/:userId', editUserName);
+router.post('/profile/email/:userId', editUserEmail);
+router.post('/toggle-notifications/:userId/:value', toggleNotifications);
+router.post('/toggle-driver-should-call/:userId/:value', toggleDriverShouldCall);
 router.get('/ride-history/:userId', getRideHistory);
 router.post('/complaint/:userId', fileComplaint);
 router.post('/referral/:userId', handleReferral);
