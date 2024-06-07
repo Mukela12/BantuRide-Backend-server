@@ -4,7 +4,7 @@ import cloudinary from '../helpers/cloudinaryConfig.js';
 
 // Get user profile
 export const getUserProfile = async (req, res) => {
-    const { userId } = req.body;
+    const { userId } = req.params;
     try {
         const user = await userModel.findById(userId);
         if (!user) {
