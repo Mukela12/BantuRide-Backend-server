@@ -522,153 +522,253 @@ Future<void> toggleDriverAvailability(String driverId) async {
 
 
 
+##ENOS PROFILE USER ENDPOINTS
 
-## API Endpoints for User Profile
 
-### Get User Profile
+## Base URL 
 
-- **Endpoint:** `GET /profile/:userId`
-- **Description:** Retrieve the profile information for a specific user.
-- **Request Parameters:**
-  - `userId` (String): User's unique identifier (ObjectId).
-
-#### Example Request in React Native:
+The base URL for the BantuRide API is:
 ```
-import axios from 'axios';
-
-const getUserProfile = async (userId) => {
-    try {
-        const response = await axios.get(`https://banturide.onrender.com/profile/${userId}`);
-        console.log('User Profile:', response.data);
-    } catch (error) {
-        console.error('Error fetching user profile:', error);
-    }
-};
-
+https://banturide.onrender.com
 ```
 
+## Profile Endpoints
 
-### Edit User Profile
+### 1. Get User Profile
+To retrieve the user profile information.
 
-- **Endpoint:** `PUT /profile/edit/:userId`
-- **Description:** Edit the profile information of a specific user.
-- **Request Body:**
-  - `firstname` (String): User's first name.
-  - `lastname` (String): User's last name.
-  - `email` (String): User's email address.
-  - `address` (String): User's address.
-  - `phoneNumber` (String): User's phone number.
+**Endpoint:** `GET /profile/:userId`
 
-#### Example Request in React Native:
+**Request Parameters:**
+- `userId` (string): ID of the user
+
+**Example Request (React Native):**
 ```
-import axios from 'axios';
-
-const editUserProfile = async (userId, firstname, lastname, email, address, phoneNumber) => {
-    try {
-        const response = await axios.put(`https://banturide.onrender.com/profile/edit/${userId}`, {
-            firstname,
-            lastname,
-            email,
-            address,
-            phoneNumber
-        });
-        console.log('User Profile Updated:', response.data);
-    } catch (error) {
-        console.error('Error updating user profile:', error);
-    }
-};
-
+const response = await fetch('https://banturide.onrender.com/profile/123456', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+const responseData = await response.json();
+console.log(responseData);
 ```
 
-### Toggle Notifications
+### 2. Edit User's Name
+To edit the user's first and last name.
 
-- **Endpoint:** `POST /profile/toggle-notifications/:userId`
-- **Description:** Toggle the notifications setting for a specific user.
-- **Request Parameters:**
-  - `userId` (String): User's unique identifier (ObjectId).
+**Endpoint:** `POST /profile/name/:userId`
 
-#### Example Request in React Native:
+**Request Parameters:**
+- `userId` (string): ID of the user
+
+**Request Body:**
+- `firstname` (string): New first name
+- `lastname` (string): New last name
+
+**Example Request (React Native):**
 ```
-import axios from 'axios';
-
-const toggleNotifications = async (userId) => {
-    try {
-        const response = await axios.post(`https://banturide.onrender.com/profile/toggle-notifications/${userId}`);
-        console.log('Notifications Toggled:', response.data);
-    } catch (error) {
-        console.error('Error toggling notifications:', error);
-    }
-};
-
-```
-
-### Toggle Driver Should Call
-
-- **Endpoint:** `POST /profile/toggle-driver-should-call/:userId`
-- **Description:** Toggle the "driver should call" setting for a specific user default set to ``` false ```.
-- **Request Parameters:**
-  - `userId` (String): User's unique identifier (ObjectId).
-
-#### Example Request in React Native:
-```
-import axios from 'axios';
-
-const toggleDriverShouldCall = async (userId) => {
-    try {
-        const response = await axios.post(`https://banturide.onrender.com/profile/toggle-driver-should-call/${userId}`);
-        console.log('Driver Should Call Toggled:', response.data);
-    } catch (error) {
-        console.error('Error toggling driver should call:', error);
-    }
-};
+const response = await fetch('https://banturide.onrender.com/profile/name/123456', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    firstname: 'John',
+    lastname: 'Doe',
+  }),
+});
+const responseData = await response.json();
+console.log(responseData);
 ```
 
-### Get Ride History
+### 3. Edit User's Email
+To edit the user's email address.
 
-- **Endpoint:** `GET /profile/ride-history/:userId`
-- **Description:** Retrieve the ride history for a specific user.
-- **Request Parameters:**
-  - `userId` (String): User's unique identifier (ObjectId).
+**Endpoint:** `POST /profile/email/:userId`
 
-#### Example Request in React Native:
+**Request Parameters:**
+- `userId` (string): ID of the user
+
+**Request Body:**
+- `email` (string): New email address
+
+**Example Request (React Native):**
 ```
-import axios from 'axios';
-
-const getRideHistory = async (userId) => {
-    try {
-        const response = await axios.get(`https://banturide.onrender.com/profile/ride-history/${userId}`);
-        console.log('Ride History:', response.data);
-    } catch (error) {
-        console.error('Error fetching ride history:', error);
-    }
-};
-
+const response = await fetch('https://banturide.onrender.com/profile/email/123456', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    email: 'newemail@example.com',
+  }),
+});
+const responseData = await response.json();
+console.log(responseData);
 ```
 
+### 4. Upload Profile Picture
+To upload a profile picture.
 
-### File a Complaint
+**Endpoint:** `POST /profile/upload/:userId`
 
-- **Endpoint:** `POST /profile/complaint/:userId`
-- **Description:** File a complaint for a specific user.
-- **Request Body:**
-  - `complaintText` (String): The text of the complaint.
+**Request Parameters:**
+- `userId` (string): ID of the user
 
-#### Example Request in React Native:
+**Request Body:**
+- `image` (string): Base64 string of the image or image URL
 
+**Example Request (React Native):**
 ```
-import axios from 'axios';
-
-const fileComplaint = async (userId, complaintText) => {
-    try {
-        const response = await axios.post(`https://banturide.onrender.com/profile/complaint/${userId}`, {
-            complaintText
-        });
-        console.log('Complaint Filed:', response.data);
-    } catch (error) {
-        console.error('Error filing complaint:', error);
-    }
-};
+const response = await fetch('https://banturide.onrender.com/profile/upload/123456', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    image: 'data:image/jpeg;base64,...', // Base64 string of the image
+  }),
+});
+const responseData = await response.json();
+console.log(responseData);
 ```
+
+### 5. Remove Profile Picture
+To remove the profile picture.
+
+**Endpoint:** `DELETE /profile/remove/:userId`
+
+**Request Parameters:**
+- `userId` (string): ID of the user
+
+**Example Request (React Native):**
+```
+const response = await fetch('https://banturide.onrender.com/profile/remove/123456', {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+const responseData = await response.json();
+console.log(responseData);
+```
+
+### 6. Toggle Notifications
+To toggle notification settings for the user.
+
+**Endpoint:** `POST /toggle-notifications/:userId/:value`
+
+**Request Parameters:**
+- `userId` (string): ID of the user
+- `value` (boolean): `true` or `false` to enable or disable notifications
+
+**Example Request (React Native):**
+```
+const response = await fetch('https://banturide.onrender.com/toggle-notifications/123456/true', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+const responseData = await response.json();
+console.log(responseData);
+```
+
+### 7. Toggle Driver Should Call
+To toggle whether the driver should call the user.
+
+**Endpoint:** `POST /toggle-driver-should-call/:userId/:value`
+
+**Request Parameters:**
+- `userId` (string): ID of the user
+- `value` (boolean): `true` or `false` to enable or disable driver call
+
+**Example Request (React Native):**
+```
+const response = await fetch('https://banturide.onrender.com/toggle-driver-should-call/123456/true', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+const responseData = await response.json();
+console.log(responseData);
+```
+
+### 8. Get Ride History
+To get the ride history of the user.
+
+**Endpoint:** `GET /ride-history/:userId`
+
+**Request Parameters:**
+- `userId` (string): ID of the user
+
+**Example Request (React Native):**
+```
+const response = await fetch('https://banturide.onrender.com/ride-history/123456', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+const responseData = await response.json();
+console.log(responseData);
+```
+
+### 9. File a Complaint
+To file a complaint.
+
+**Endpoint:** `POST /complaint/:userId`
+
+**Request Parameters:**
+- `userId` (string): ID of the user
+
+**Request Body:**
+- `complaintText` (string): Text of the complaint
+
+**Example Request (React Native):**
+```
+const response = await fetch('https://banturide.onrender.com/complaint/123456', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    complaintText: 'Your complaint text here',
+  }),
+});
+const responseData = await response.json();
+console.log(responseData);
+```
+
+### 10. Handle Referrals
+To handle referrals.
+
+**Endpoint:** `POST /referral/:userId`
+
+**Request Parameters:**
+- `userId` (string): ID of the user
+
+**Request Body:**
+- `referralCode` (string): Referral code
+
+**Example Request (React Native):**
+```
+const response = await fetch('https://banturide.onrender.com/referral/123456', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    referralCode: 'REF12345',
+  }),
+});
+const responseData = await response.json();
+console.log(responseData);
+```
+
+By following this documentation, frontend developers can effectively integrate the BantuRide API into their applications to manage user profiles seamlessly.
 
 
 
