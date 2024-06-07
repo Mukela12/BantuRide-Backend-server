@@ -1,5 +1,6 @@
 import { userModel } from "../models/UserModel.js";
 import Booking from '../models/BookRideModel.js';
+import cloudinary from '../helpers/cloudinaryConfig.js';
 
 // Get user profile
 export const getUserProfile = async (req, res) => {
@@ -11,6 +12,46 @@ export const getUserProfile = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
+
+// Upload profile picture
+export const uploadProfilePicture = async (req, res) => {
+    const { userId } = req.params;
+    const { image } = req.body; // Assuming image URL or base64 string is sent in the body
+
+    try {
+        const uploadResponse = await cloudinary.uploader.upload(image, { public_id: `profile_${userId}` });
+
+        const user = await userModel.findByIdAndUpdate(userId, { avatar: uploadResponse.secure_url }, { new: true });
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Remove profile picture
+export const removeProfilePicture = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await userModel.findById(userId);
+
+        if (!user.avatar) {
+            return res.status(400).json({ error: "No profile picture to remove." });
+        }
+
+        const publicId = user.avatar.split('/').pop().split('.')[0];
+
+        await cloudinary.uploader.destroy(publicId);
+
+        user.avatar = null;
+        await user.save();
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 // Edit user's name
 export const editUserName = async (req, res) => {
