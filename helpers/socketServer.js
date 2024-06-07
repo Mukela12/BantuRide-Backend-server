@@ -1,39 +1,42 @@
+// helpers/socketServer.js
+
 import { Server } from "socket.io";
-import { DriverModel } from "../models/DriverModel.js";
-import { Notification } from "../models/Notification.js";
 
 const socketServer = (server) => {
-  const io = new Server(server, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
-    }
-  });
+  const io = new Server(server);
+  const users = {};
 
   io.on("connection", (socket) => {
     console.log("A user connected");
 
-    // Listen for driver available notifications
-    socket.on("driverAvailable", async (data) => {
-      const { userId, driverId } = data;
-
-      // Notify the user
-      const notification = new Notification({
-        userId,
-        driverId,
-        title: 'Driver Available',
-        message: 'A driver is available for your ride.',
-      });
-      await notification.save();
-
-      io.to(userId).emit("notification", notification);
+    // Listen for a custom event to store the user ID with the socket ID
+    socket.on("registerUser", (userId) => {
+      users[userId] = socket.id;
+      console.log(`User registered: ${userId}`);
     });
 
     // Disconnect event
     socket.on("disconnect", () => {
       console.log("A user disconnected");
+      for (const userId in users) {
+        if (users[userId] === socket.id) {
+          delete users[userId];
+          console.log(`User unregistered: ${userId}`);
+          break;
+        }
+      }
     });
   });
+
+  // Function to emit events to a specific user
+  const emitToUser = (userId, event, data) => {
+    const socketId = users[userId];
+    if (socketId) {
+      io.to(socketId).emit(event, data);
+    }
+  };
+
+  return { io, emitToUser };
 };
 
 export default socketServer;
