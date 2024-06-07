@@ -1,6 +1,32 @@
 import { userModel } from "../models/UserModel.js";
 import Booking from '../models/BookRideModel.js';
 import cloudinary from '../helpers/cloudinaryConfig.js';
+import multer from 'multer';
+import path from 'path';
+
+// Multer configuration for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png/;
+        const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb('Error: Images Only!');
+        }
+    }
+}).single('avatar');
 
 // Get user profile
 export const getUserProfile = async (req, res) => {
@@ -18,20 +44,27 @@ export const getUserProfile = async (req, res) => {
 
 // Upload profile picture
 export const uploadProfilePicture = async (req, res) => {
-    const { userId, image } = req.body; // Assuming image URL or base64 string is sent in the body
-
-    try {
-        const uploadResponse = await cloudinary.uploader.upload(image, { public_id: `profile_${userId}` });
-
-        const user = await userModel.findByIdAndUpdate(userId, { avatar: uploadResponse.secure_url }, { new: true });
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
+    upload(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ success: false, error: err });
+        }
+        
+        const { userId } = req.body;
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No file uploaded' });
         }
 
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+        try {
+            const uploadResponse = await cloudinary.uploader.upload(req.file.path, { public_id: `profile_${userId}` });
+            const user = await userModel.findByIdAndUpdate(userId, { avatar: uploadResponse.secure_url }, { new: true });
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            res.status(200).json(user);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
 };
 
 // Remove profile picture
