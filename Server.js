@@ -15,7 +15,6 @@ import userRoute from "./routes/AuthRoute.js";
 import Rides from "./routes/BookingRide.js";
 import PaymentRoute from "./routes/PaymentRoute.js";
 import ProfileRoute from "./routes/profileRoutes.js";
-import socketServer from "./helpers/socketServer.js';
 
 dotenv.config();
 
