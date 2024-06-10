@@ -3,9 +3,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import bodyParser from 'body-parser';
-import http from 'http';
-import fs from 'fs';
+import http from 'http'; // Add http import
+import { fileURLToPath } from 'url';
 import path from 'path';
+import fs from 'fs';
 
 import connectDB from "./config/db.js";
 
@@ -15,23 +16,32 @@ import userRoute from "./routes/AuthRoute.js";
 import Rides from "./routes/BookingRide.js";
 import PaymentRoute from "./routes/PaymentRoute.js";
 import ProfileRoute from "./routes/profileRoutes.js";
+import socketServer from "./helpers/socketServer.js";
 
+// configure dotenv
 dotenv.config();
 
+// connect to database
 connectDB();
 
+// set up server application
 const app = express();
-const server = http.createServer(app); 
+const server = http.createServer(app); // Create http server
 
 const PORT = 3004;
 
+// Set up Socket.IO server
 socketServer(server);
 
+// middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Create uploads directory if it does not exist
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
