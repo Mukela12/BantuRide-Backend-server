@@ -17,28 +17,22 @@ import PaymentRoute from "./routes/PaymentRoute.js";
 import ProfileRoute from "./routes/profileRoutes.js";
 import socketServer from "./helpers/socketServer.js';
 
-// configure dotenv
 dotenv.config();
 
-// connect to database
 connectDB();
 
-// set up server application
 const app = express();
-const server = http.createServer(app); // Create http server
+const server = http.createServer(app); 
 
 const PORT = 3004;
 
-// Set up Socket.IO server
 socketServer(server);
 
-// middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Create uploads directory if it does not exist
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
