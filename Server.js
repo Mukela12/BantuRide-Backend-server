@@ -1,10 +1,11 @@
-// import dependencies
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import bodyParser from 'body-parser';
-import http from 'http'; // Add http import
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
 
 import connectDB from "./config/db.js";
 
@@ -14,7 +15,7 @@ import userRoute from "./routes/AuthRoute.js";
 import Rides from "./routes/BookingRide.js";
 import PaymentRoute from "./routes/PaymentRoute.js";
 import ProfileRoute from "./routes/profileRoutes.js";
-import socketServer from "./helpers/socketServer.js";
+import socketServer from "./helpers/socketServer.js';
 
 // configure dotenv
 dotenv.config();
@@ -37,6 +38,12 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Create uploads directory if it does not exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
 // routes
 app.use("/auth", userRoute);
 app.use("/bookride", Rides);
@@ -55,5 +62,5 @@ app.get('/', (req, res) => {
 
 // run server
 server.listen(PORT, () => { 
-    console.log(`Server is running on port ${PORT}`)
+    console.log(`Server is running on port ${PORT}`);
 });
