@@ -5,7 +5,6 @@ import { DriverModel } from '../models/DriverModel.js';
 import dotenv from "dotenv";
 dotenv.config();
 import admin from 'firebase-admin';
-import serviceAccount from '../config/banturide-firebase.json' assert { type: 'json' };
 
 import initFirebaseAdmin from '../config/firebase.js';
 
