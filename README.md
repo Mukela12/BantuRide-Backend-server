@@ -106,13 +106,15 @@ Ensure that the frontend properly handles the real-time updates from Firebase fo
 This guide provides the essential steps needed for a React Native developer to integrate with the booking functionalities and manage FCM tokens for real-time updates. Adjust the implementation details based on specific project architecture and backend setup.
 
 
+##
 
+##
 
+##
 
+##
 
-
-
-
+##
 
 
 
