@@ -21,7 +21,7 @@ const { io, emitToUser } = socketServer(server);
 async function updateFirestoreBooking(booking) {
   const bookingRef = db.collection('bookings').doc(String(booking._id));
   await bookingRef.set({
-    userId: booking.user,
+    userId: booking.user.toString(),  // Convert ObjectId to string
     pickUpLocation: booking.pickUpLocation,
     dropOffLocation: booking.dropOffLocation,
     price: booking.price,
