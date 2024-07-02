@@ -20,14 +20,27 @@ const { io, emitToUser } = socketServer(server);
 // Helper function to update Firestore and local MongoDB
 async function updateFirestoreBooking(booking) {
   const bookingRef = db.collection('bookings').doc(String(booking._id));
-  await bookingRef.set({
-    userId: booking.user.toString(),  // Convert ObjectId to string
-    pickUpLocation: booking.pickUpLocation,
-    dropOffLocation: booking.dropOffLocation,
+  
+  // Ensure all custom objects are converted to plain objects
+  const firestoreBooking = {
+    userId: booking.user,
+    pickUpLocation: {
+      latitude: booking.pickUpLocation.latitude,
+      longitude: booking.pickUpLocation.longitude
+    },
+    dropOffLocation: {
+      latitude: booking.dropOffLocation.latitude,
+      longitude: booking.dropOffLocation.longitude
+    },
     price: booking.price,
     status: booking.status,
-    thirdStop: booking.thirdStop || null
-  }, { merge: true });
+    thirdStop: booking.thirdStop ? {
+      latitude: booking.thirdStop.latitude,
+      longitude: booking.thirdStop.longitude
+    } : null
+  };
+
+  await bookingRef.set(firestoreBooking, { merge: true });
 }
 
 async function notifyDriverChange(bookingId) {
