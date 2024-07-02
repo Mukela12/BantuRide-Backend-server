@@ -17,23 +17,28 @@ const app = express();
 const server = http.createServer(app);
 const { io, emitToUser } = socketServer(server);
 
-// Helper function to update Firestore and local MongoDB
 async function updateFirestoreBooking(booking) {
   const bookingRef = db.collection('bookings').doc(String(booking._id));
 
+  // Ensure conversion to plain object and stringify ObjectId
   const pickUpLocation = booking.pickUpLocation.toObject ? booking.pickUpLocation.toObject() : booking.pickUpLocation;
   const dropOffLocation = booking.dropOffLocation.toObject ? booking.dropOffLocation.toObject() : booking.dropOffLocation;
   const thirdStop = booking.thirdStop && booking.thirdStop.toObject ? booking.thirdStop.toObject() : booking.thirdStop;
 
+  // Convert ObjectId .toString() for user and any other MongoDB ObjectId fields
   await bookingRef.set({
-    userId: booking.user.toString(),  // Convert ObjectId to string
+    userId: booking.user.toString(),  // Explicit conversion to string
     pickUpLocation,
     dropOffLocation,
     price: booking.price,
     status: booking.status,
-    thirdStop: booking.thirdStop || null
+    thirdStop: thirdStop ? {
+      latitude: thirdStop.latitude,
+      longitude: thirdStop.longitude
+    } : null
   }, { merge: true });
 }
+
 
 
   await bookingRef.set(firestoreBooking, { merge: true });
