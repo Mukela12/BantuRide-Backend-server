@@ -11,7 +11,7 @@ import express from 'express';
 
 import initFirebaseAdmin from '../config/firebase.js';
 
-const db = initFirebaseAdmin(); 
+const db = initFirebaseAdmin();
 
 const app = express();
 const server = http.createServer(app);
@@ -26,8 +26,8 @@ async function updateFirestoreBooking(booking) {
   const thirdStop = booking.thirdStop && booking.thirdStop.toObject ? booking.thirdStop.toObject() : booking.thirdStop;
 
   // Convert ObjectId .toString() for user and any other MongoDB ObjectId fields
-  await bookingRef.set({
-    userId: booking.user.toString(),  // Explicit conversion to string
+  const firestoreBooking = {
+    userId: booking.user.toString(), // Explicit conversion to string
     pickUpLocation,
     dropOffLocation,
     price: booking.price,
@@ -36,10 +36,7 @@ async function updateFirestoreBooking(booking) {
       latitude: thirdStop.latitude,
       longitude: thirdStop.longitude
     } : null
-  }, { merge: true });
-}
-
-
+  };
 
   await bookingRef.set(firestoreBooking, { merge: true });
 }
@@ -135,79 +132,78 @@ const searchDriversForBooking = async (req, res) => {
   const { bookingId, userFCMToken } = req.body; // Assume userFCMToken is provided by the client
 
   try {
-      const booking = await Booking.findById(bookingId);
-      if (!booking) {
-          return res.status(404).json({ success: false, message: "Booking not found." });
-      }
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found." });
+    }
 
-      let searchComplete = false;
+    let searchComplete = false;
 
-      // Listen for changes in the 'drivers' collection where the status is 'available'
-      const unsubscribe = db.collection('drivers')
-          .where('status', '==', 'available')
-          .onSnapshot(async snapshot => {
-              if (!booking.searchActive) {  // Check if the search should continue
-                  unsubscribe();  // Stop listening if driver has been selected
-                  return;
-              }
+    // Listen for changes in the 'drivers' collection where the status is 'available'
+    const unsubscribe = db.collection('drivers')
+      .where('status', '==', 'available')
+      .onSnapshot(async snapshot => {
+        if (!booking.searchActive) {  // Check if the search should continue
+          unsubscribe();  // Stop listening if driver has been selected
+          return;
+        }
 
-              snapshot.docChanges().forEach(async (change) => {
-                  if (change.type === "added" || change.type === "modified") {
-                      const driverData = change.doc.data();
-                      const distance = getDistanceFromLatLonInKm(
-                          booking.pickUpLocation.latitude,
-                          booking.pickUpLocation.longitude,
-                          driverData.location.latitude,
-                          driverData.location.longitude
-                      );
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === "added" || change.type === "modified") {
+            const driverData = change.doc.data();
+            const distance = getDistanceFromLatLonInKm(
+              booking.pickUpLocation.latitude,
+              booking.pickUpLocation.longitude,
+              driverData.location.latitude,
+              driverData.location.longitude
+            );
 
-                      if (distance <= 5) { // Within 5 miles
-                          const drivers = await findAvailableDriversWithinRadius(
-                              [booking.pickUpLocation.longitude, booking.pickUpLocation.latitude], 5
-                          );
+            if (distance <= 5) { // Within 5 miles
+              const drivers = await findAvailableDriversWithinRadius(
+                [booking.pickUpLocation.longitude, booking.pickUpLocation.latitude], 5
+              );
 
-                          // Send FCM message with available drivers
-                          if (drivers.length > 0 && !searchComplete) {
-                              const message = {
-                                  token: userFCMToken,
-                                  data: {
-                                      drivers: JSON.stringify(drivers.map(driver => ({
-                                          _id: driver._id,
-                                          firstName: driver.firstName,
-                                          lastName: driver.lastName,
-                                          vehicleInfo: driver.vehicleInfo
-                                      }))),
-                                      bookingId: booking._id.toString()
-                                  },
-                                  notification: {
-                                      title: 'Drivers Available',
-                                      body: 'Available drivers found near your location.'
-                                  }
-                              };
-                              await admin.messaging().send(message);
-                          }
-                      }
+              // Send FCM message with available drivers
+              if (drivers.length > 0 && !searchComplete) {
+                const message = {
+                  token: userFCMToken,
+                  data: {
+                    drivers: JSON.stringify(drivers.map(driver => ({
+                      _id: driver._id,
+                      firstName: driver.firstName,
+                      lastName: driver.lastName,
+                      vehicleInfo: driver.vehicleInfo
+                    }))),
+                    bookingId: booking._id.toString()
+                  },
+                  notification: {
+                    title: 'Drivers Available',
+                    body: 'Available drivers found near your location.'
                   }
-              });
-          });
-
-      // Set timeout to end search after 1 minute
-      setTimeout(() => {
-          if (!searchComplete) {
-              unsubscribe(); // Stop the Firestore listener
-              res.status(404).json({ success: false, message: "No drivers found within the time limit." });
+                };
+                await admin.messaging().send(message);
+              }
+            }
           }
-      }, 60000); // 1 minute
-  } catch (error) {
-      console.error("Error in searching drivers for booking:", error);
-      return res.status(500).json({
-          success: false,
-          message: "Error in processing your request.",
-          error: error.message || error,
+        });
       });
+
+    // Set timeout to end search after 1 minute
+    setTimeout(() => {
+      if (!searchComplete) {
+        unsubscribe(); // Stop the Firestore listener
+        res.status(404).json({ success: false, message: "No drivers found within the time limit." });
+      }
+    }, 60000); // 1 minute
+  } catch (error) {
+    console.error("Error in searching drivers for booking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in processing your request.",
+      error: error.message || error,
+    });
   }
 };
-
 
 const assignDriverToBooking = async (req, res) => {
   const { bookingId, driverId } = req.body;
@@ -262,7 +258,6 @@ const assignDriverToBooking = async (req, res) => {
     });
   }
 };
-
 
 // Controller to handle cancellation of a ride by a user
 const cancelBooking = async (req, res) => {
@@ -343,7 +338,7 @@ const requestDriverCancellation = async (req, res) => {
 // Listener for user acceptance of driver ride cancellation
 io.on('connection', (socket) => {
   socket.on('acceptDriverCancellation', async (data) => {
-    const { bookingId, driverId } = data;
+    const { bookingId, driverId, userFCMToken } = data;
     try {
       const booking = await Booking.findById(bookingId);
 
@@ -362,21 +357,21 @@ io.on('connection', (socket) => {
         await booking.save();
 
         // Begin search for a new driver
-        await searchAndSendAvailableDrivers(booking, res);
+        await searchDriversForBooking({ body: { bookingId: booking._id, userFCMToken } });
 
-        return res.status(200).json({
+        socket.emit('driverCancellationAccepted', {
           success: true,
-          message: "Driver's ride cancellation accepted. Booking set to pending.",
+          message: "Driver's ride cancellation accepted. Booking set to pending."
         });
       } else {
-        return res.status(400).json({
+        socket.emit('driverCancellationAccepted', {
           success: false,
-          message: "Invalid request or driver's ride cancellation not requested.",
+          message: "Invalid request or driver's ride cancellation not requested."
         });
       }
     } catch (error) {
       console.error("Error in accepting driver ride cancellation:", error);
-      return res.status(500).json({
+      socket.emit('driverCancellationAccepted', {
         success: false,
         message: "Error in accepting driver ride cancellation.",
         error: error.message || error,
@@ -384,7 +379,6 @@ io.on('connection', (socket) => {
     }
   });
 });
-
 
 // Controller to handle driver arrival at pickup location
 const driverAtPickupLocation = async (req, res) => {
@@ -420,7 +414,6 @@ const driverAtPickupLocation = async (req, res) => {
     });
   }
 };
-
 
 // Controller to handle starting the ride
 const startRide = async (req, res) => {
@@ -494,50 +487,45 @@ const endRide = async (req, res) => {
 };
 
 const getDriverBooking = async (req, res) => {
-   const { driverId } = req.body;
-
-    try {
-      const driver = await DriverModel.findById(driverId);
-      if (!driver) {
-        return res.status(404).json({
-          success: false,
-          message: "Driver not found."
-        });
-      }
-      const booking = await Booking.findById(driver.bookingid);
-      if (!booking) {
-        return res.status(404).json({
-          success: false,
-          message: "Booking Yet."
-        });
-      }
-      return res.status(200).json({
-        success: true,
-        message: "Booking found.",
-        booking: booking
-      });
-    } catch (error) {
-      console.error("Error in getting driver booking:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Error in getting driver booking.",
-        error: error.message || error,
-      });
-    }
-
-};
-
-const getDriverUser = async (req, res) => {
-
   const { driverId } = req.body;
 
   try {
     const driver = await DriverModel.findById(driverId);
-
+    if (!driver) {
+      return res.status(404).json({
+        success: false,
+        message: "Driver not found."
+      });
+    }
     const booking = await Booking.findById(driver.bookingid);
-    
-    const user = await userModel.findById(booking.user);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking Yet."
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Booking found.",
+      booking: booking
+    });
+  } catch (error) {
+    console.error("Error in getting driver booking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in getting driver booking.",
+      error: error.message || error,
+    });
+  }
+};
 
+const getDriverUser = async (req, res) => {
+  const { driverId } = req.body;
+
+  try {
+    const driver = await DriverModel.findById(driverId);
+    const booking = await Booking.findById(driver.bookingid);
+    const user = await userModel.findById(booking.user);
 
     if (!driver) {
       return res.status(404).json({
@@ -558,9 +546,6 @@ const getDriverUser = async (req, res) => {
       error: error.message || error,
     });
   }
-
 };
 
 export { PassengerBookingRequest, cancelBooking, getDriverUser, getDriverBooking, requestDriverCancellation, driverAtPickupLocation, assignDriverToBooking, startRide, searchDriversForBooking, endRide };
-
-
