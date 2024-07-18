@@ -1,19 +1,17 @@
+import dotenv from "dotenv";
+dotenv.config();  // Configure dotenv as early as possible
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import morgan from "morgan";
 import bodyParser from 'body-parser';
-import http from 'http'; // Add http import
+import http from 'http';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
-import initFirebaseAdmin from './config/firebase.js'; // Import Firebase initialization
 
-// Configure dotenv
-dotenv.config();
-
-// Initialize Firebase Admin
-initFirebaseAdmin(); // This will initialize Firebase and ensure it's ready to use
+import initFirebaseAdmin from './config/firebase.js';  // Ensure this is imported early
+initFirebaseAdmin();  // Initialize Firebase before other routes
 
 // Set up server application
 const app = express();
@@ -52,10 +50,6 @@ app.use('/profile', ProfileRoute);
 app.use('/notifications', NotificationsRoute);
 
 // Root endpoint
-app.head('/', (req, res) => {
-    res.status(200).send();
-});
-
 app.get('/', (req, res) => {
     res.status(200).send('Server is running!');
 });
