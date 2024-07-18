@@ -1,11 +1,15 @@
-import { DriverModel } from '../models/DriverModel.js';
+import admin from 'firebase-admin';
+
+const db = admin.firestore();  // Assuming admin has been initialized and configured properly elsewhere
 
 // Edit driver profile
 export const editDriverProfile = async (req, res) => {
     const { driverId } = req.params;
     const { firstName, lastName, dob, email, phoneNumber, nrcNumber, address, vehicleInfo } = req.body;
+    const driverRef = db.collection('drivers').doc(driverId);
+
     try {
-        const driver = await DriverModel.findByIdAndUpdate(driverId, {
+        await driverRef.update({
             firstName,
             lastName,
             dob,
@@ -14,8 +18,9 @@ export const editDriverProfile = async (req, res) => {
             nrcNumber,
             address,
             vehicleInfo
-        }, { new: true });
-        res.status(200).json(driver);
+        });
+        const updatedDriver = await driverRef.get();
+        res.status(200).json(updatedDriver.data());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -24,11 +29,19 @@ export const editDriverProfile = async (req, res) => {
 // Toggle driver availability
 export const toggleDriverAvailability = async (req, res) => {
     const { driverId } = req.params;
+    const driverRef = db.collection('drivers').doc(driverId);
+
     try {
-        const driver = await DriverModel.findById(driverId);
-        driver.driverStatus = driver.driverStatus === 'available' ? 'unavailable' : 'available';
-        await driver.save();
-        res.status(200).json(driver);
+        const doc = await driverRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ error: "Driver not found" });
+        }
+        const currentStatus = doc.data().driverStatus;
+        await driverRef.update({
+            driverStatus: currentStatus === 'available' ? 'unavailable' : 'available'
+        });
+        const updatedDoc = await driverRef.get();
+        res.status(200).json(updatedDoc.data());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -37,9 +50,14 @@ export const toggleDriverAvailability = async (req, res) => {
 // Get all driver information
 export const getDriverInfo = async (req, res) => {
     const { driverId } = req.params;
+    const driverRef = db.collection('drivers').doc(driverId);
+
     try {
-        const driver = await DriverModel.findById(driverId);
-        res.status(200).json(driver);
+        const doc = await driverRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ error: "Driver not found" });
+        }
+        res.status(200).json(doc.data());
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
