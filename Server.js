@@ -7,33 +7,21 @@ import http from 'http'; // Add http import
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
+import initFirebaseAdmin from './config/firebase.js'; // Import Firebase initialization
 
-import connectDB from "./config/db.js";
-
-import NotifcationsRoute from './routes/notifications.js';
-import favoriteRoutes from './routes/favorites.js';
-import userRoute from "./routes/AuthRoute.js";
-import Rides from "./routes/BookingRide.js";
-import PaymentRoute from "./routes/PaymentRoute.js";
-import ProfileRoute from "./routes/profileRoutes.js";
-import socketServer from "./helpers/socketServer.js";
-
-// configure dotenv
+// Configure dotenv
 dotenv.config();
 
-// connect to database
-connectDB();
+// Initialize Firebase Admin
+initFirebaseAdmin(); // This will initialize Firebase and ensure it's ready to use
 
-// set up server application
+// Set up server application
 const app = express();
 const server = http.createServer(app); // Create http server
 
-const PORT = 3004;
+const PORT = process.env.PORT || 3004;
 
-// Set up Socket.IO server
-socketServer(server);
-
-// middleware
+// Set up middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
@@ -44,17 +32,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
+    fs.mkdirSync(uploadsDir);
 }
 
-// routes
+// Import routes
+import NotificationsRoute from './routes/notifications.js';
+import favoriteRoutes from './routes/favorites.js';
+import userRoute from "./routes/AuthRoute.js";
+import Rides from "./routes/BookingRide.js";
+import PaymentRoute from "./routes/PaymentRoute.js";
+import ProfileRoute from "./routes/profileRoutes.js";
+
+// Use routes
 app.use("/auth", userRoute);
 app.use("/bookride", Rides);
 app.use('/payment', PaymentRoute);
 app.use('/favorites', favoriteRoutes);
 app.use('/profile', ProfileRoute);
-app.use('/notifications', NotifcationsRoute);
+app.use('/notifications', NotificationsRoute);
 
+// Root endpoint
 app.head('/', (req, res) => {
     res.status(200).send();
 });
@@ -63,7 +60,7 @@ app.get('/', (req, res) => {
     res.status(200).send('Server is running!');
 });
 
-// run server
-server.listen(PORT, () => { 
+// Run server
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
