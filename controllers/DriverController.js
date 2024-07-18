@@ -1,153 +1,158 @@
 import jwt from "jsonwebtoken";
 import otplib from "otplib";
-import { hashPassword, comparePassword, sendVerificationEmail } from "../helpers/authHelper.js";
-import { DriverModel } from '../models/DriverModel.js';
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-dotenv.config();
 import admin from 'firebase-admin';
+import { hashPassword, comparePassword } from "../helpers/authHelper.js";
 
-import initFirebaseAdmin from '../config/firebase.js';
+dotenv.config();
+const db = admin.firestore(); // Firestore database instance
 
-const db = initFirebaseAdmin(); 
+// Configure nodemailer for sending emails
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, 
+    auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASS,
+    },
+});
 
-
+// Helper to generate OTP using HOTP
 const generateHOTP = (secret, counter) => {
-  return otplib.hotp.generate(secret, counter);
+    return otplib.hotp.generate(secret, counter);
 };
 
+// Helper to update driver data in Firestore
 const updateFirebaseDriver = async (driver) => {
-    const driverRef = db.collection('drivers').doc(String(driver._id));
-    
-    // Ensuring vehicleInfo is a plain object
-    const vehicleInfo = driver.vehicleInfo.toObject ? driver.vehicleInfo.toObject() : driver.vehicleInfo;
-  
-    await driverRef.set({
-      firstName: driver.firstName,
-      lastName: driver.lastName,
-      dob: driver.dob,
-      email: driver.email,
-      phoneNumber: driver.phoneNumber,
-      nrcNumber: driver.nrcNumber,
-      address: driver.address,
-      vehicleInfo: JSON.parse(JSON.stringify(vehicleInfo)), // Convert to plain object if necessary
-      location: new admin.firestore.GeoPoint(driver.location.coordinates[1], driver.location.coordinates[0]),
-      available: driver.driverStatus === 'available'
-    }, { merge: true });
-  };
-  
+    const driverRef = db.collection('drivers').doc(driver.email);
+    await driverRef.set(driver, { merge: true });
+};
 
+// Register a new driver
 const registerOne = async (req, res) => {
-  const { firstName, lastName, dob, email, phoneNumber, nrcNumber, address, password, latitude, longitude } = req.body;
-  try {
-    if (await DriverModel.findOne({ email })) {
-      return res.status(409).send({ success: false, message: 'Email already in use' });
+    const { firstName, lastName, dob, email, phoneNumber, nrcNumber, address, password, latitude, longitude } = req.body;
+
+    try {
+        const driverRef = db.collection('drivers').doc(email);
+        const doc = await driverRef.get();
+        if (doc.exists) {
+            return res.status(409).send({ success: false, message: 'Email already in use' });
+        }
+
+        const hashedPassword = await hashPassword(password);
+        const otp = generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000));
+        const newDriver = {
+            firstName,
+            lastName,
+            dob,
+            email,
+            phoneNumber,
+            nrcNumber,
+            address,
+            password: hashedPassword,
+            location: new admin.firestore.GeoPoint(latitude, longitude),
+            driverStatus: "available",
+            otp
+        };
+
+        await updateFirebaseDriver(newDriver);
+        await transporter.sendMail({
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Account Verification',
+            text: `Your OTP for account verification is: ${otp}`,
+        });
+
+        return res.status(201).send({ success: true, message: 'Driver registered. Please verify your email.', driver: newDriver });
+    } catch (error) {
+        console.error('Error in registerOne API:', error);
+        return res.status(500).send({ success: false, message: 'Internal Server Error', error: error.message });
     }
-
-    const hashedPassword = await hashPassword(password);
-    
-    const driver = new DriverModel({
-      firstName,
-      lastName,
-      dob,
-      email,
-      phoneNumber,
-      nrcNumber,
-      address,
-      password: hashedPassword,
-      location: { coordinates: [longitude, latitude] },
-      driverStatus: "available",
-      otp: generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000))
-    });
-
-    await driver.save();
-    await updateFirebaseDriver(driver);
-    await sendVerificationEmail(driver.email, driver.otp);
-    return res.status(201).send({ success: true, message: 'Driver registered. Please verify your email.' });
-  } catch (error) {
-    console.error('Error in registerOne API:', error);
-    return res.status(500).send({ success: false, message: 'Internal Server Error', error: error.message });
-  }
 };
 
+// Update vehicle information
 const registerTwo = async (req, res) => {
-  const { email, vehicleRegistrationNumber, licenseNumber, licenseExpirationDate, brand, model, seats, color, category } = req.body;
-  try {
-    const driver = await DriverModel.findOne({ email });
-    if (!driver) {
-      return res.status(404).send({ success: false, message: 'Driver not found' });
+    const { email, vehicleRegistrationNumber, licenseNumber, licenseExpirationDate, brand, model, seats, color, category } = req.body;
+    const driverRef = db.collection('drivers').doc(email);
+
+    try {
+        const doc = await driverRef.get();
+        if (!doc.exists) {
+            return res.status(404).send({ success: false, message: 'Driver not found' });
+        }
+
+        const vehicleInfo = {
+            registrationNumber: vehicleRegistrationNumber,
+            licenseNumber,
+            licenseExpirationDate,
+            brand,
+            model,
+            seats,
+            color,
+            category
+        };
+
+        await driverRef.update({ vehicleInfo });
+        return res.status(200).send({ success: true, message: 'Vehicle information updated successfully.' });
+    } catch (error) {
+        console.error('Error in registerTwo API:', error);
+        return res.status(500).send({ success: false, message: 'Internal Server Error', error: error.message });
     }
-
-    driver.vehicleInfo = {
-      registrationNumber: vehicleRegistrationNumber,
-      licenseNumber,
-      licenseExpirationDate,
-      brand,
-      model,
-      seats,
-      color,
-      category
-    };
-
-    await driver.save();
-    await updateFirebaseDriver(driver);
-    return res.status(200).send({ success: true, message: 'Vehicle information updated successfully.', driver: driver });
-  } catch (error) {
-    console.error('Error in registerTwo API:', error);
-    return res.status(500).send({ success: false, message: 'Internal Server Error', error: error.message });
-  }
 };
 
+// Sign in a driver
 const signIn = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const driver = await DriverModel.findOne({ email });
-    if (!driver) {
-      return res.status(404).send({ success: false, message: "Driver Not Found" });
-    }
+    const { email, password } = req.body;
+    const driverRef = db.collection('drivers').doc(email);
 
-    if (driver.otp) {
-      return res.status(403).send({ success: false, message: "Please verify your OTP before logging in." });
-    }
+    try {
+        const doc = await driverRef.get();
+        if (!doc.exists) {
+            return res.status(404).send({ success: false, message: "Driver Not Found" });
+        }
 
-    const match = await comparePassword(password, driver.password);
-    if (!match) {
-      return res.status(401).send({ success: false, message: "Invalid email or password" });
-    }
+        const driver = doc.data();
+        if (driver.otp) {
+            return res.status(403).send({ success: false, message: "Please verify your OTP before logging in." });
+        }
 
-    const token = jwt.sign({ _id: driver._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    return res.status(200).send({ success: true, message: "Login successful", token, driver });
-  } catch (error) {
-    console.error('Error in signIn API:', error);
-    return res.status(500).send({ success: false, message: "Internal Server Error", error: error.message });
-  }
+        const match = await comparePassword(password, driver.password);
+        if (!match) {
+            return res.status(401).send({ success: false, message: "Invalid email or password" });
+        }
+
+        const token = jwt.sign({ email: driver.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
+        return res.status(200).send({ success: true, message: "Login successful", token, driver });
+    } catch (error) {
+        console.error('Error in signIn API:', error);
+        return res.status(500).send({ success: false, message: "Internal Server Error", error: error.message });
+    }
 };
 
+// Verify driver OTP
 const verifyOTPDriver = async (req, res) => {
-  const { email, enteredOTP } = req.body;
-  try {
-    const driver = await DriverModel.findOne({ email });
-    if (!driver) {
-      return res.json({
-        success: false,
-        message: `User not found with the given email: ${email}`,
-      });
-    }
+    const { email, enteredOTP } = req.body;
+    const driverRef = db.collection('drivers').doc(email);
 
-    if (driver.otp !== enteredOTP) {
-      return res.json({
-        success: false,
-        message: 'Entered OTP does not match!'
-      });
-    }
+    try {
+        const doc = await driverRef.get();
+        if (!doc.exists) {
+            return res.json({ success: false, message: `User not found with the given email: ${email}` });
+        }
 
-    driver.otp = null;
-    await driver.save();
-    await updateFirebaseDriver(driver);
-    res.json({ success: true, message: 'OTP verified successfully!', driver });
-  } catch (error) {
-    console.error('Error during OTP verification:', error);
-    res.json({ success: false, message: 'Error during OTP verification' });
-  }
+        const driver = doc.data();
+        if (driver.otp !== enteredOTP) {
+            return res.json({ success: false, message: 'Entered OTP does not match!' });
+        }
+
+        await driverRef.update({ otp: null });
+        res.json({ success: true, message: 'OTP verified successfully!', driver });
+    } catch (error) {
+        console.error('Error during OTP verification:', error);
+        res.json({ success: false, message: 'Error during OTP verification' });
+    }
 };
 
 export {
