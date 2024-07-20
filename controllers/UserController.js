@@ -2,12 +2,14 @@ import admin from 'firebase-admin';
 import jwt from "jsonwebtoken";
 import otplib from "otplib";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
+import { hashPassword, comparePassword } from "../helpers/authHelper.js";
+
 dotenv.config();
 
 const db = admin.firestore();  // Firestore database instance
 
 // Configure nodemailer for sending emails
-const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -21,18 +23,6 @@ const transporter = nodemailer.createTransport({
 // Helper to generate OTP using HOTP
 const generateHOTP = (secret, counter) => {
     return otplib.hotp.generate(secret, counter);
-};
-
-// Helper to hash passwords
-const hashPassword = async (password) => {
-    const bcrypt = require('bcryptjs');
-    return bcrypt.hash(password, 10);
-};
-
-// Helper to compare passwords
-const comparePassword = async (password, hashedPassword) => {
-    const bcrypt = require('bcryptjs');
-    return bcrypt.compare(password, hashedPassword);
 };
 
 // Register a new user
