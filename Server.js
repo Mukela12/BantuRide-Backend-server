@@ -11,7 +11,7 @@ import path from 'path';
 import fs from 'fs';
 
 import initFirebaseAdmin from './config/firebase.js';
-import { authMiddleware } from './middlewares/authMiddleware.js'; // Import auth middleware
+import { authMiddleware } from './config/authMiddleware.js'; // Import auth middleware
 
 const db = initFirebaseAdmin(); // Initialize Firebase
 
