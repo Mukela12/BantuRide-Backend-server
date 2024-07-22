@@ -4,10 +4,9 @@ import otplib from "otplib";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import { hashPassword, comparePassword } from "../helpers/authHelper.js";
+import { db } from '../config/firebaseConfig.js';
 
 dotenv.config();
-
-const db = admin.firestore();  // Firestore database instance
 
 // Configure nodemailer for sending emails
 const transporter = nodemailer.createTransport({
