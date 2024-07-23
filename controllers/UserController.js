@@ -36,17 +36,18 @@ const generateHOTP = (secret, counter) => {
 const registerController = async (req, res) => {
     const { firstname, lastname, email, password } = req.body;
 
-    const usersRef = db.collection('users');
     try {
-        const userSnapshot = await usersRef.where('email', '==', email).get();
-        if (!userSnapshot.empty) {
-            return res.status(409).json({ success: false, message: 'User Already Registered With This Email' });
-        }
-
         const hashedPassword = await hashPassword(password);
+
+        const userRecord = await admin.auth().createUser({
+            email,
+            password: hashedPassword,
+            displayName: `${firstname} ${lastname}`
+        });
+
         const otp = generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000));
 
-        await usersRef.add({
+        await db.collection('users').doc(userRecord.uid).set({
             firstname,
             lastname,
             email,
@@ -75,10 +76,9 @@ const registerController = async (req, res) => {
 // Verify the OTP sent to the user
 const verifyOTP = async (req, res) => {
     const { email, enteredOTP } = req.body;
-    const usersRef = db.collection('users');
 
     try {
-        const userSnapshot = await usersRef.where('email', '==', email).where('otp', '==', enteredOTP).get();
+        const userSnapshot = await db.collection('users').where('email', '==', email).where('otp', '==', enteredOTP).get();
         if (userSnapshot.empty) {
             return res.status(403).json({ success: false, message: 'Entered OTP does not match!' });
         }
@@ -97,10 +97,9 @@ const verifyOTP = async (req, res) => {
 // Login user
 const loginController = async (req, res) => {
     const { email, password } = req.body;
-    const usersRef = db.collection('users');
 
     try {
-        const userSnapshot = await usersRef.where('email', '==', email).get();
+        const userSnapshot = await db.collection('users').where('email', '==', email).get();
         if (userSnapshot.empty) {
             return res.status(404).json({ success: false, message: "User Not Found" });
         }
@@ -129,11 +128,10 @@ const loginController = async (req, res) => {
 
 // Update user profile
 const updateUserController = async (req, res) => {
-    const { firstname, lastname, password, email } = req.body;
-    const usersRef = db.collection('users');
+    const { firstname, lastname, email, password } = req.body;
 
     try {
-        const userSnapshot = await usersRef.where('email', '==', email).get();
+        const userSnapshot = await db.collection('users').where('email', '==', email).get();
         if (userSnapshot.empty) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -149,6 +147,20 @@ const updateUserController = async (req, res) => {
         userSnapshot.forEach(async doc => {
             await doc.ref.update(updates);
         });
+
+        if (firstname || lastname || password) {
+            const userRecord = await admin.auth().getUserByEmail(email);
+
+            let authUpdates = {};
+            if (firstname || lastname) {
+                authUpdates.displayName = `${firstname || userRecord.displayName.split(' ')[0]} ${lastname || userRecord.displayName.split(' ')[1]}`;
+            }
+            if (password) {
+                authUpdates.password = await hashPassword(password);
+            }
+
+            await admin.auth().updateUser(userRecord.uid, authUpdates);
+        }
 
         return res.status(200).json({ success: true, message: "Profile Updated Successfully" });
     } catch (error) {
