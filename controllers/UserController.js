@@ -4,13 +4,18 @@ import otplib from "otplib";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import { hashPassword, comparePassword } from "../helpers/authHelper.js";
+import fs from 'fs';
 
 dotenv.config();
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
+    const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+
     admin.initializeApp({
-        credential: admin.credential.applicationDefault()
+        credential: admin.credential.cert(serviceAccount),
+        projectId: process.env.FIREBASE_PROJECT_ID
     });
 }
 
