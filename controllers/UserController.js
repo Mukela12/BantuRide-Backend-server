@@ -43,16 +43,9 @@ const registerController = async (req, res) => {
 
     try {
         const hashedPassword = await hashPassword(password);
-
-        const userRecord = await admin.auth().createUser({
-            email,
-            password: hashedPassword,
-            displayName: `${firstname} ${lastname}`
-        });
-
         const otp = generateHOTP(process.env.SECRET, Math.floor(100000 + Math.random() * 900000));
 
-        await db.collection('users').doc(userRecord.uid).set({
+        await db.collection('users').add({
             firstname,
             lastname,
             email,
@@ -152,20 +145,6 @@ const updateUserController = async (req, res) => {
         userSnapshot.forEach(async doc => {
             await doc.ref.update(updates);
         });
-
-        if (firstname || lastname || password) {
-            const userRecord = await admin.auth().getUserByEmail(email);
-
-            let authUpdates = {};
-            if (firstname || lastname) {
-                authUpdates.displayName = `${firstname || userRecord.displayName.split(' ')[0]} ${lastname || userRecord.displayName.split(' ')[1]}`;
-            }
-            if (password) {
-                authUpdates.password = await hashPassword(password);
-            }
-
-            await admin.auth().updateUser(userRecord.uid, authUpdates);
-        }
 
         return res.status(200).json({ success: true, message: "Profile Updated Successfully" });
     } catch (error) {
