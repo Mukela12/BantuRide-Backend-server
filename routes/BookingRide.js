@@ -11,37 +11,24 @@ import {
   getDriverBooking,
   getDriverUser
 } from "../controllers/BookRideController.js";
-import { get } from "http";
+import { authMiddleware } from "../config/authMiddleware.js"; // Ensure auth middleware is imported
 
 const router = express.Router();
 
-
-// user post routes
-router.post("/book-request", PassengerBookingRequest);
-
-router.post("/cancel-booking", cancelBooking);
-
-router.post("/search-driver",searchDriversForBooking);
-
-router.post("/select-driver", assignDriverToBooking);
-
-
+// User post routes
+router.post("/book-request", authMiddleware, PassengerBookingRequest);
+router.post("/cancel-booking", authMiddleware, cancelBooking);
+router.post("/search-driver", authMiddleware, searchDriversForBooking);
+router.post("/select-driver", authMiddleware, assignDriverToBooking);
 
 // Driver get routes
-router.get("/get-driver-booking", getDriverBooking);
+router.get("/get-driver-booking", authMiddleware, getDriverBooking);
+router.get("/get-user-driver", authMiddleware, getDriverUser);
 
-router.get("/get-user-driver", getDriverUser);
-
-
-
-// driver post routes
-
-router.post("/request-driver-cancellation", requestDriverCancellation);
-
-router.post("/driver-at-pickup-location", driverAtPickupLocation);
-
-router.post("/start-ride", startRide);
-
-router.post("/end-ride", endRide);
+// Driver post routes
+router.post("/request-driver-cancellation", authMiddleware, requestDriverCancellation);
+router.post("/driver-at-pickup-location", authMiddleware, driverAtPickupLocation);
+router.post("/start-ride", authMiddleware, startRide);
+router.post("/end-ride", authMiddleware, endRide);
 
 export default router;
